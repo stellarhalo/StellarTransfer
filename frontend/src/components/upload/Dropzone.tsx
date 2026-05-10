@@ -14,7 +14,7 @@ const useStyles = createStyles((theme) => ({
     marginBottom: 30,
   },
 
-  cowWrapper: {
+  transferWrapper: {
     position: "relative",
     zIndex: 5,
     width: "min(468px, calc(100vw - 32px))",
@@ -26,7 +26,7 @@ const useStyles = createStyles((theme) => ({
     paddingBottom: 50,
   },
 
-  cowDropzone: {
+  transferDropzone: {
     border: 0,
     padding: 0,
     background: "transparent",
@@ -49,7 +49,7 @@ const useStyles = createStyles((theme) => ({
     bottom: -20,
   },
 
-  cowCard: {
+  transferCard: {
     display: "flex",
     alignItems: "center",
     width: "100%",
@@ -77,7 +77,7 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
-  cowPlus: {
+  transferPlus: {
     display: "grid",
     placeItems: "center",
     flex: "0 0 52px",
@@ -88,12 +88,12 @@ const useStyles = createStyles((theme) => ({
     color: "#0b0d10",
   },
 
-  cowText: {
+  transferText: {
     flex: 1,
     minWidth: 0,
   },
 
-  cowTitle: {
+  transferTitle: {
     color: "#17191d",
     fontSize: 26,
     lineHeight: 1.05,
@@ -104,7 +104,7 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
-  cowDescription: {
+  transferDescription: {
     color: "#4d5159",
     fontSize: 12,
     marginTop: 6,
@@ -114,7 +114,7 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
-  cowReceive: {
+  transferReceive: {
     position: "absolute",
     top: 16,
     right: 16,
@@ -154,7 +154,7 @@ const Dropzone = ({
   maxShareSize: number;
   onFilesChanged: (files: FileUpload[]) => void;
   onReceive?: () => void;
-  variant?: "default" | "cowTransfer";
+  variant?: "default" | "stellarTransfer";
 }) => {
   const t = useTranslate();
 
@@ -162,13 +162,13 @@ const Dropzone = ({
   const openRef = useRef<() => void>();
 
   const dropzoneContent =
-    variant == "cowTransfer" ? (
-      <div className={classes.cowCard}>
-        <div className={classes.cowPlus}>
+    variant == "stellarTransfer" ? (
+      <div className={classes.transferCard}>
+        <div className={classes.transferPlus}>
           <TbPlus size={34} strokeWidth={3} />
         </div>
-        <div className={classes.cowText}>
-          <Text className={classes.cowTitle}>
+        <div className={classes.transferText}>
+          <Text className={classes.transferTitle}>
             {title || <FormattedMessage id="upload.dropzone.title" />}
           </Text>
         </div>
@@ -193,7 +193,7 @@ const Dropzone = ({
   return (
     <div
       className={
-        variant == "cowTransfer" ? classes.cowWrapper : classes.wrapper
+        variant == "stellarTransfer" ? classes.transferWrapper : classes.wrapper
       }
     >
       <MantineDropzone
@@ -220,15 +220,17 @@ const Dropzone = ({
           }
         }}
         className={
-          variant == "cowTransfer" ? classes.cowDropzone : classes.dropzone
+          variant == "stellarTransfer"
+            ? classes.transferDropzone
+            : classes.dropzone
         }
         radius="md"
       >
         {dropzoneContent}
       </MantineDropzone>
-      {variant == "cowTransfer" && (
+      {variant == "stellarTransfer" && (
         <Button
-          className={classes.cowReceive}
+          className={classes.transferReceive}
           leftIcon={<TbInbox size={18} />}
           disabled={isUploading}
           onClick={(event) => {

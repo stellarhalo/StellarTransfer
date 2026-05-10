@@ -324,7 +324,7 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
             <Box>
               <Text weight={800}>添加文件</Text>
               <Text size="xs" color="dimmed">
-                参考奶牛快传上传入口
+                快速上传入口
               </Text>
             </Box>
           </Group>
@@ -350,7 +350,7 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
           </Title>
           {config.get("share.allowRegistration") && (
             <Text color="dimmed" size="sm" mt={8} mb={28}>
-                <FormattedMessage id="signin.description" />{" "}
+              <FormattedMessage id="signin.description" />{" "}
               <Anchor
                 component={Link}
                 href={"/auth/signUp"}

@@ -889,7 +889,7 @@ const Upload = ({
 
         <div className={classes.sceneCard} aria-hidden="true">
           <div className={classes.sceneLogo}>
-            COW
+            STAR
             <br />
             TRANS
             <br />
@@ -932,7 +932,7 @@ const Upload = ({
               onFilesChanged={handleDropzoneFilesChanged}
               isUploading={isUploading}
               onReceive={showReceiveModal}
-              variant="cowTransfer"
+              variant="stellarTransfer"
             />
           </div>
         )}
