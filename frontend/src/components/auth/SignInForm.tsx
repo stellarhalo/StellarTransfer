@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { TbInfoCircle } from "react-icons/tb";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as yup from "yup";
 import useConfig from "../../hooks/config.hook";
 import useUser from "../../hooks/user.hook";
@@ -26,6 +26,7 @@ import authService from "../../services/auth.service";
 import { getOAuthIcon, getOAuthUrl } from "../../utils/oauth.util";
 import { safeRedirectPath } from "../../utils/router.util";
 import toast from "../../utils/toast.util";
+import Logo from "../Logo";
 
 const useStyles = createStyles((theme) => ({
   page: {
@@ -63,12 +64,8 @@ const useStyles = createStyles((theme) => ({
   logoMark: {
     width: 34,
     height: 34,
-    borderRadius: 12,
     display: "grid",
     placeItems: "center",
-    background: "#ffd84d",
-    color: "#171717",
-    fontWeight: 900,
   },
   heroCopy: {
     position: "absolute",
@@ -80,36 +77,6 @@ const useStyles = createStyles((theme) => ({
     "@media (max-width: 820px)": {
       bottom: 34,
     },
-  },
-  uploadPill: {
-    position: "absolute",
-    left: "50%",
-    bottom: 46,
-    zIndex: 2,
-    width: "min(420px, calc(100% - 56px))",
-    height: 82,
-    transform: "translateX(-50%)",
-    borderRadius: 42,
-    background: "#fff",
-    boxShadow: "0 22px 70px rgba(0, 0, 0, 0.25)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "14px 16px 14px 24px",
-    "@media (max-width: 820px)": {
-      display: "none",
-    },
-  },
-  plus: {
-    width: 52,
-    height: 52,
-    borderRadius: "50%",
-    display: "grid",
-    placeItems: "center",
-    background: "#ffd84d",
-    color: "#171717",
-    fontSize: 30,
-    lineHeight: 1,
   },
   main: {
     position: "relative",
@@ -231,6 +198,8 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
   const t = useTranslate();
   const { refreshUser } = useUser();
   const { classes } = useStyles();
+  const { locale } = useIntl();
+  const isZh = locale.startsWith("zh");
 
   const [oauthProviders, setOauthProviders] = useState<string[] | null>(null);
   const [isRedirectingToOauthProvider, setIsRedirectingToOauthProvider] =
@@ -307,41 +276,33 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
     <Box className={classes.page}>
       <Box className={classes.hero}>
         <Box className={classes.logo}>
-          <Box className={classes.logoMark}>S</Box>
-          <span>StellarTransfer</span>
+          <Box className={classes.logoMark}>
+            <Logo height={34} width={34} />
+          </Box>
+          <span>{isZh ? "星闪包" : "StellarTransfer"}</span>
         </Box>
         <Box className={classes.heroCopy}>
           <Text size="sm" weight={800} transform="uppercase">
-            星闪包
+            {isZh ? "文件快传" : "File Transfer"}
           </Text>
           <Title order={1} mt={8} sx={{ maxWidth: 420, lineHeight: 1.05 }}>
-            Send files with a calmer, faster workspace.
+            {isZh
+              ? "更安静、更快速的文件传输空间。"
+              : "Send files with a calmer, faster workspace."}
           </Title>
-        </Box>
-        <Box className={classes.uploadPill}>
-          <Group spacing={14}>
-            <Box className={classes.plus}>+</Box>
-            <Box>
-              <Text weight={800}>添加文件</Text>
-              <Text size="xs" color="dimmed">
-                快速上传入口
-              </Text>
-            </Box>
-          </Group>
-          <Text weight={800}>接收文件</Text>
         </Box>
       </Box>
       <Box className={classes.main}>
         <Box className={classes.nav}>
           <Anchor component={Link} href="/upload" className={classes.navLink}>
-            上传
+            {t("navbar.upload")}
           </Anchor>
           <Anchor
             component={Link}
             href="/auth/signUp"
             className={classes.navLink}
           >
-            注册
+            {t("navbar.signup")}
           </Anchor>
         </Box>
         <Box className={classes.card}>

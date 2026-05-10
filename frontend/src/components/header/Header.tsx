@@ -14,9 +14,11 @@ import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ReactNode, useEffect, useState } from "react";
+import { useIntl } from "react-intl";
 import useConfig from "../../hooks/config.hook";
 import useUser from "../../hooks/user.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
+import Logo from "../Logo";
 import ActionAvatar from "./ActionAvatar";
 import NavbarShareMenu from "./NavbarShareMenu";
 
@@ -120,12 +122,8 @@ const useStyles = createStyles((theme) => ({
   logoMark: {
     width: 34,
     height: 34,
-    borderRadius: 12,
     display: "grid",
     placeItems: "center",
-    background: "#171717",
-    color: "#ffd84d",
-    fontWeight: 900,
   },
 }));
 
@@ -134,6 +132,7 @@ const Header = () => {
   const router = useRouter();
   const config = useConfig();
   const t = useTranslate();
+  const { locale } = useIntl();
 
   const [opened, toggleOpened] = useDisclosure(false);
 
@@ -213,8 +212,14 @@ const Header = () => {
       <Container size="lg" className={classes.header}>
         <Link href="/" passHref className={classes.brand}>
           <Group>
-            <Box className={classes.logoMark}>S</Box>
-            <Text weight={900}>{config.get("general.appName")}</Text>
+            <Box className={classes.logoMark}>
+              <Logo height={34} width={34} />
+            </Box>
+            <Text weight={900}>
+              {locale.startsWith("zh")
+                ? "星闪包"
+                : config.get("general.appName")}
+            </Text>
           </Group>
         </Link>
         <Group spacing={5} className={classes.links}>

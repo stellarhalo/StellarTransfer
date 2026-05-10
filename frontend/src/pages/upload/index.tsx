@@ -28,6 +28,7 @@ import { useForm, yupResolver } from "@mantine/form";
 import { useModals } from "@mantine/modals";
 import { cleanNotifications } from "@mantine/notifications";
 import { AxiosError } from "axios";
+import Head from "next/head";
 import moment from "moment";
 import Link from "next/link";
 import pLimit from "p-limit";
@@ -36,7 +37,6 @@ import {
   TbAlertCircle,
   TbArrowRight,
   TbBell,
-  TbChevronDown,
   TbCloud,
   TbCheck,
   TbHelpCircle,
@@ -46,7 +46,7 @@ import {
   TbMailbox,
   TbShieldCheck,
 } from "react-icons/tb";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import Logo from "../../components/Logo";
 import Meta from "../../components/Meta";
 import Dropzone from "../../components/upload/Dropzone";
@@ -67,10 +67,74 @@ import toast from "../../utils/toast.util";
 import { useRouter } from "next/router";
 import * as yup from "yup";
 import CopyTextField from "../../components/upload/CopyTextField";
+import ActionAvatar from "../../components/header/ActionAvatar";
+import i18nUtil from "../../utils/i18n.util";
 
 const promiseLimit = pLimit(3);
 let errorToastShown = false;
 let createdShare: Share;
+
+const HOME_COPY = {
+  zh: {
+    brandPrimary: "星闪包",
+    history: "传输历史",
+    cloud: "我的闪包",
+    signIn: "注册/登录",
+    language: "EN",
+    scene: ["星", "闪", "包"],
+    addFile: "添加文件",
+    receiveFile: "接受文件",
+    footer: "帮助与反馈 | 服务协议 | 星闪包提供支持",
+    mobileFooter: "星闪包 | 添加文件或输入取件码",
+    receiveTitle: "输入取件码",
+    receiveHeading: "像取快递一样取文件",
+    receiveDescription:
+      "点击接收文件，输入分享得到的取件码，即可进入下载页面。",
+    receiveSubmit: "取文件",
+    receiveSecurity: "支持网页多端访问，文件由你的星闪包服务保存。",
+    panelTitle: "文件传输",
+    returnHome: "返回添加文件",
+    copyLink: "复制链接",
+    copyCodeHint: "点击拷贝 8 位取件码",
+    codeCopied: "已复制该取件码",
+    fileCount: "共 {count} 个文件",
+    totalPrefix: "共",
+    progress: "上传进度",
+    startUpload: "开始上传",
+    pageTitle: "上传 - 星闪包",
+  },
+  en: {
+    brandPrimary: "StellarTransfer",
+    history: "History",
+    cloud: "My Flash Packs",
+    signIn: "Sign in",
+    language: "中",
+    scene: ["STAR", "TRANS", "FER"],
+    addFile: "Add File",
+    receiveFile: "Receive File",
+    footer: "Help & Feedback | Terms | Powered by StellarTransfer",
+    mobileFooter: "StellarTransfer | Add files or enter pickup code",
+    receiveTitle: "Enter Pickup Code",
+    receiveHeading: "Pick up files like a delivery",
+    receiveDescription:
+      "Click Receive File, enter the pickup code, and open the download page.",
+    receiveSubmit: "Get Files",
+    receiveSecurity:
+      "Works across web devices. Files are stored by your StellarTransfer service.",
+    panelTitle: "File Transfer",
+    returnHome: "Back to Add File",
+    copyLink: "Copy Link",
+    copyCodeHint: "Click to copy the 8-character pickup code",
+    codeCopied: "Pickup code copied",
+    fileCount: "{count} files",
+    totalPrefix: "Total",
+    progress: "Upload Progress",
+    startUpload: "Start Upload",
+    pageTitle: "Upload - StellarTransfer",
+  },
+};
+
+type HomeCopy = (typeof HOME_COPY)["zh"];
 
 const generateShareId = (length: number = 16) => {
   const chars =
@@ -128,42 +192,6 @@ const useStyles = createStyles((theme) => ({
     inset: 0,
     background:
       "radial-gradient(circle at 76% 12%, rgba(255,255,255,0.2), transparent 25%), linear-gradient(90deg, rgba(10, 10, 10, 0.18), transparent 45%), linear-gradient(0deg, rgba(0,0,0,0.24), transparent 32%)",
-  },
-
-  leftRail: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 7,
-    width: 216,
-    background:
-      "linear-gradient(180deg, rgba(11, 13, 16, 0.86), rgba(38, 27, 34, 0.72)), linear-gradient(140deg, rgba(255,255,255,0.08), transparent 45%)",
-    backdropFilter: "blur(2px)",
-
-    [theme.fn.smallerThan("md")]: {
-      width: 0,
-      background: "transparent",
-    },
-  },
-
-  sideLinks: {
-    position: "absolute",
-    left: 28,
-    bottom: 126,
-    zIndex: 9,
-    display: "flex",
-    flexDirection: "column",
-    gap: 34,
-    color: "rgba(255,255,255,0.86)",
-    fontSize: 14,
-    fontWeight: 800,
-    letterSpacing: 1,
-    writingMode: "vertical-rl",
-
-    [theme.fn.smallerThan("md")]: {
-      display: "none",
-    },
   },
 
   proTab: {
@@ -273,6 +301,19 @@ const useStyles = createStyles((theme) => ({
 
     [theme.fn.smallerThan("xs")]: {
       display: "none",
+    },
+  },
+
+  navAvatar: {
+    width: 36,
+    height: 36,
+    display: "grid",
+    placeItems: "center",
+    borderRadius: 6,
+    background: "#f5f5f5",
+
+    "&:hover": {
+      background: "#ececec",
     },
   },
 
@@ -528,7 +569,7 @@ const useStyles = createStyles((theme) => ({
 
   footer: {
     position: "absolute",
-    left: 244,
+    left: 34,
     bottom: 18,
     zIndex: 4,
     color: "rgba(255,255,255,0.78)",
@@ -624,12 +665,21 @@ const Upload = ({
   const modals = useModals();
   const router = useRouter();
   const t = useTranslate();
+  const { locale } = useIntl();
 
   const { user } = useUser();
   const config = useConfig();
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [isUploading, setisUploading] = useState(false);
   const [completedShare, setCompletedShare] = useState<CompletedShare>();
+  const language = locale === "en-US" ? "en-US" : "zh-CN";
+  const homeText = language === "en-US" ? HOME_COPY.en : HOME_COPY.zh;
+
+  const toggleLanguage = () => {
+    const nextLanguage = language === "en-US" ? "zh-CN" : "en-US";
+    i18nUtil.setLanguageCookie(nextLanguage);
+    location.reload();
+  };
 
   useConfirmLeave({
     message: t("upload.notify.confirm-leave"),
@@ -753,12 +803,15 @@ const Upload = ({
 
   const showReceiveModal = () => {
     modals.openModal({
-      title: "输入取件码",
+      title: homeText.receiveTitle,
       centered: true,
       radius: "md",
       size: 520,
       children: (
-        <ReceiveCodeForm onSubmit={(code) => router.push(`/share/${code}`)} />
+        <ReceiveCodeForm
+          labels={homeText}
+          onSubmit={(code) => router.push(`/share/${code}`)}
+        />
       ),
     });
   };
@@ -821,34 +874,18 @@ const Upload = ({
     return (
       <Box className={classes.page}>
         <Meta title={t("upload.title")} />
-        <div className={classes.leftRail} />
+        <Head>
+          <title>{homeText.pageTitle}</title>
+          <meta name="og:title" content={homeText.pageTitle} />
+          <meta name="twitter:title" content={homeText.pageTitle} />
+        </Head>
         <div className={classes.background} />
         <div className={classes.shade} />
 
         <Link href="/" className={classes.brand}>
           <Logo height={42} width={42} />
-          <Text className={classes.brandText}>
-            StellarTransfer
-            <br />
-            星闪包
-          </Text>
-          <TbChevronDown size={22} />
+          <Text className={classes.brandText}>{homeText.brandPrimary}</Text>
         </Link>
-
-        <div className={classes.sideLinks}>
-          <Anchor component={Link} href="/account/shares">
-            传输历史
-          </Anchor>
-          <Anchor component={Link} href="/account/reverseShares">
-            我的云盘
-          </Anchor>
-          <Anchor component={Link} href="/privacy">
-            服务协议
-          </Anchor>
-          <Anchor component={Link} href="/imprint">
-            帮助反馈
-          </Anchor>
-        </div>
 
         <nav className={classes.nav} aria-label="Primary">
           <Anchor
@@ -857,7 +894,7 @@ const Upload = ({
             className={cx(classes.navLink, classes.optionalNavLink)}
           >
             <TbHistory size={17} />
-            传输历史
+            {homeText.history}
           </Anchor>
           <Anchor
             component={Link}
@@ -865,7 +902,7 @@ const Upload = ({
             className={cx(classes.navLink, classes.optionalNavLink)}
           >
             <TbCloud size={17} />
-            我的云盘
+            {homeText.cloud}
           </Anchor>
           <ActionIcon className={classes.navIcon} radius="xl" size={34}>
             <TbHelpCircle size={19} />
@@ -873,27 +910,38 @@ const Upload = ({
           <ActionIcon className={classes.navIcon} radius="xl" size={34}>
             <TbBell size={18} />
           </ActionIcon>
+          {user ? (
+            <Box className={classes.navAvatar}>
+              <ActionAvatar />
+            </Box>
+          ) : (
+            <Anchor
+              component={Link}
+              href="/auth/signIn"
+              className={classes.navLink}
+            >
+              <TbLogin size={17} />
+              {homeText.signIn}
+            </Anchor>
+          )}
           <Anchor
-            component={Link}
-            href="/auth/signIn"
+            component="button"
+            type="button"
             className={classes.navLink}
+            onClick={toggleLanguage}
           >
-            <TbLogin size={17} />
-            {user ? "账号" : "注册/登录"}
-          </Anchor>
-          <Anchor className={classes.navLink}>
             <TbLanguage size={18} />
-            中/EN
+            {homeText.language}
           </Anchor>
         </nav>
 
         <div className={classes.sceneCard} aria-hidden="true">
           <div className={classes.sceneLogo}>
-            STAR
+            {homeText.scene[0]}
             <br />
-            TRANS
+            {homeText.scene[1]}
             <br />
-            FER
+            {homeText.scene[2]}
           </div>
           <div className={classes.legs} />
           <div className={classes.shoes} />
@@ -918,6 +966,7 @@ const Upload = ({
               maxExpiration: config.get("share.maxExpiration"),
               shareIdLength: config.get("share.shareIdLength"),
             }}
+            labels={homeText}
             onStartUpload={uploadFiles}
             onReturnHome={() => {
               setFiles([]);
@@ -927,7 +976,8 @@ const Upload = ({
         ) : (
           <div className={classes.uploadPanel}>
             <Dropzone
-              title="添加文件"
+              title={homeText.addFile}
+              receiveLabel={homeText.receiveFile}
               maxShareSize={maxShareSize}
               onFilesChanged={handleDropzoneFilesChanged}
               isUploading={isUploading}
@@ -936,12 +986,8 @@ const Upload = ({
             />
           </div>
         )}
-        <Text className={classes.footer}>
-          帮助与反馈 | 服务协议 | Powered by StellarTransfer
-        </Text>
-        <Text className={classes.mobileFooter}>
-          StellarTransfer 星闪包 | 添加文件或输入取件码
-        </Text>
+        <Text className={classes.footer}>{homeText.footer}</Text>
+        <Text className={classes.mobileFooter}>{homeText.mobileFooter}</Text>
       </Box>
     );
   }
@@ -970,6 +1016,7 @@ const Upload = ({
 };
 
 type ReceiveCodeFormProps = {
+  labels: HomeCopy;
   // eslint-disable-next-line no-unused-vars
   onSubmit(code: string): void;
 };
@@ -989,6 +1036,7 @@ type HomepageUploadPanelProps = {
     maxExpiration: Timespan;
     shareIdLength: number;
   };
+  labels: HomeCopy;
   // eslint-disable-next-line no-unused-vars
   onStartUpload(createShare: CreateShare, files: FileUpload[]): void;
   onReturnHome(): void;
@@ -1001,6 +1049,7 @@ const HomepageUploadPanel = ({
   completedShare,
   maxShareSize,
   options,
+  labels,
   onStartUpload,
   onReturnHome,
 }: HomepageUploadPanelProps) => {
@@ -1160,8 +1209,8 @@ const HomepageUploadPanel = ({
             <Box
               component="button"
               type="button"
-              aria-label="返回添加文件"
-              title="返回添加文件"
+              aria-label={labels.returnHome}
+              title={labels.returnHome}
               className={classes.completedReturnButton}
               onClick={returnHome}
             >
@@ -1180,18 +1229,18 @@ const HomepageUploadPanel = ({
             className={classes.yellowAction}
             onClick={() => navigator.clipboard.writeText(link)}
           >
-            复制链接
+            {labels.copyLink}
           </Button>
           <Divider />
           <Text size="sm" color="dimmed" weight={700}>
-            点击拷贝 8 位取件码
+            {labels.copyCodeHint}
           </Text>
           <Group
             spacing={8}
             noWrap
             onClick={() => {
               navigator.clipboard.writeText(pickupCode);
-              toast.success("已复制该取件码");
+              toast.success(labels.codeCopied);
             }}
           >
             {codeParts.map((part, index) => (
@@ -1202,7 +1251,7 @@ const HomepageUploadPanel = ({
           </Group>
           <Divider />
           <Text size="sm" color="dimmed" weight={700}>
-            共 {files.length} 个文件
+            {labels.fileCount.replace("{count}", files.length.toString())}
           </Text>
         </Stack>
       </Paper>
@@ -1227,7 +1276,7 @@ const HomepageUploadPanel = ({
           <Group position="apart" align="center" noWrap>
             <Group spacing={10} noWrap>
               <Title order={2} sx={{ lineHeight: 1 }}>
-                文件传输
+                {labels.panelTitle}
               </Title>
               <input
                 ref={fileInputRef}
@@ -1273,7 +1322,7 @@ const HomepageUploadPanel = ({
               </ActionIcon>
             </Group>
             <Text color="dimmed" weight={800}>
-              共{" "}
+              {labels.totalPrefix}{" "}
               {files.reduce((total, file) => total + file.size, 0) > 0
                 ? byteToHumanSizeString(
                     files.reduce((total, file) => total + file.size, 0),
@@ -1288,7 +1337,7 @@ const HomepageUploadPanel = ({
             <Stack spacing={6}>
               <Group position="apart">
                 <Text size="sm" weight={800}>
-                  上传进度
+                  {labels.progress}
                 </Text>
                 <Text size="sm" weight={900}>
                   {progress}%
@@ -1480,7 +1529,7 @@ const HomepageUploadPanel = ({
             loading={isUploading}
             disabled={files.length <= 0}
           >
-            开始上传
+            {labels.startUpload}
           </Button>
         </Stack>
       </form>
@@ -1488,7 +1537,7 @@ const HomepageUploadPanel = ({
   );
 };
 
-const ReceiveCodeForm = ({ onSubmit }: ReceiveCodeFormProps) => {
+const ReceiveCodeForm = ({ labels, onSubmit }: ReceiveCodeFormProps) => {
   const [code, setCode] = useState("");
 
   return (
@@ -1508,10 +1557,10 @@ const ReceiveCodeForm = ({ onSubmit }: ReceiveCodeFormProps) => {
       >
         <Group spacing="sm">
           <TbMailbox size={22} />
-          <Text weight={900}>像取快递一样取文件</Text>
+          <Text weight={900}>{labels.receiveHeading}</Text>
         </Group>
         <Text color="dimmed" size="sm">
-          点击接收文件，输入分享得到的取件码，即可进入下载页面。
+          {labels.receiveDescription}
         </Text>
         <PinInput
           autoFocus
@@ -1556,13 +1605,13 @@ const ReceiveCodeForm = ({ onSubmit }: ReceiveCodeFormProps) => {
           radius="xl"
           rightIcon={<TbArrowRight size={18} />}
         >
-          取文件
+          {labels.receiveSubmit}
         </Button>
         <Divider />
         <Group spacing={8}>
           <TbShieldCheck size={18} />
           <Text size="xs" color="dimmed">
-            支持网页多端访问，文件由你的 StellarTransfer 服务保存。
+            {labels.receiveSecurity}
           </Text>
         </Group>
       </Stack>

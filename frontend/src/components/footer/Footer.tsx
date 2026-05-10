@@ -2,10 +2,13 @@ import { Anchor, Footer as MFooter, SimpleGrid, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import useConfig from "../../hooks/config.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
+import { useIntl } from "react-intl";
 
 const Footer = () => {
   const t = useTranslate();
+  const { locale } = useIntl();
   const config = useConfig();
+  const isZh = locale.startsWith("zh");
   const hasImprint = !!(
     config.get("legal.imprintUrl") || config.get("legal.imprintText")
   );
@@ -42,10 +45,11 @@ const Footer = () => {
           align={isMobile ? "left" : "center"}
           weight={700}
         >
-          Powered by{" "}
+          {isZh ? "由 " : "Powered by "}
           <Anchor size="xs" href="/" weight={800}>
-            StellarTransfer
+            {isZh ? "星闪包" : "StellarTransfer"}
           </Anchor>
+          {isZh ? " 提供支持" : ""}
         </Text>
         <div>
           {config.get("legal.enabled") && (

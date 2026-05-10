@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useIntl } from "react-intl";
 import useConfig from "../hooks/config.hook";
 
 const Meta = ({
@@ -9,8 +10,12 @@ const Meta = ({
   description?: string;
 }) => {
   const config = useConfig();
+  const { locale } = useIntl();
 
-  const metaTitle = `${title} - ${config.get("general.appName")}`;
+  const appName = locale.startsWith("zh")
+    ? "星闪包"
+    : config.get("general.appName");
+  const metaTitle = `${title} - ${appName}`;
 
   return (
     <Head>

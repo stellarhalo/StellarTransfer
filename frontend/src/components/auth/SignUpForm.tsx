@@ -12,13 +12,14 @@ import {
 import { useForm, yupResolver } from "@mantine/form";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as yup from "yup";
 import useConfig from "../../hooks/config.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
 import useUser from "../../hooks/user.hook";
 import authService from "../../services/auth.service";
 import toast from "../../utils/toast.util";
+import Logo from "../Logo";
 
 const useStyles = createStyles(() => ({
   page: {
@@ -56,20 +57,19 @@ const useStyles = createStyles(() => ({
   logoMark: {
     width: 34,
     height: 34,
-    borderRadius: 12,
     display: "grid",
     placeItems: "center",
-    background: "#ffd84d",
-    color: "#171717",
-    fontWeight: 900,
   },
   heroCopy: {
     position: "absolute",
     left: 34,
     right: 34,
-    bottom: 58,
+    bottom: 146,
     zIndex: 2,
     color: "#fff",
+    "@media (max-width: 820px)": {
+      bottom: 34,
+    },
   },
   main: {
     position: "relative",
@@ -154,6 +154,8 @@ const SignUpForm = () => {
   const t = useTranslate();
   const { refreshUser } = useUser();
   const { classes } = useStyles();
+  const { locale } = useIntl();
+  const isZh = locale.startsWith("zh");
 
   const validationSchema = yup.object().shape({
     email: yup.string().email(t("common.error.invalid-email")).required(),
@@ -194,29 +196,33 @@ const SignUpForm = () => {
     <Box className={classes.page}>
       <Box className={classes.hero}>
         <Box className={classes.logo}>
-          <Box className={classes.logoMark}>S</Box>
-          <span>StellarTransfer</span>
+          <Box className={classes.logoMark}>
+            <Logo height={34} width={34} />
+          </Box>
+          <span>{isZh ? "星闪包" : "StellarTransfer"}</span>
         </Box>
         <Box className={classes.heroCopy}>
           <Text size="sm" weight={800} transform="uppercase">
-            星闪包
+            {isZh ? "文件快传" : "File Transfer"}
           </Text>
           <Title order={1} mt={8} sx={{ maxWidth: 430, lineHeight: 1.05 }}>
-            Build a private transfer desk in seconds.
+            {isZh
+              ? "几秒钟搭建你的私有文件传输台。"
+              : "Build a private transfer desk in seconds."}
           </Title>
         </Box>
       </Box>
       <Box className={classes.main}>
         <Box className={classes.nav}>
           <Anchor component={Link} href="/upload" className={classes.navLink}>
-            上传
+            {t("navbar.upload")}
           </Anchor>
           <Anchor
             component={Link}
             href="/auth/signIn"
             className={classes.navLink}
           >
-            登录
+            {t("navbar.signin")}
           </Anchor>
         </Box>
         <Paper className={classes.card}>

@@ -143,6 +143,7 @@ const useStyles = createStyles((theme) => ({
 
 const Dropzone = ({
   title,
+  receiveLabel,
   isUploading,
   maxShareSize,
   onFilesChanged,
@@ -150,6 +151,7 @@ const Dropzone = ({
   variant = "default",
 }: {
   title?: string;
+  receiveLabel?: string;
   isUploading: boolean;
   maxShareSize: number;
   onFilesChanged: (files: FileUpload[]) => void;
@@ -239,7 +241,7 @@ const Dropzone = ({
             onReceive?.();
           }}
         >
-          接受文件
+          {receiveLabel ?? "接受文件"}
         </Button>
       )}
       {variant == "default" && (

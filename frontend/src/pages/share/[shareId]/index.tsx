@@ -2,8 +2,9 @@ import { Box, createStyles, Group, Text, Title } from "@mantine/core";
 import { useModals } from "@mantine/modals";
 import { GetServerSidePropsContext } from "next";
 import { useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import Meta from "../../../components/Meta";
+import Logo from "../../../components/Logo";
 import DownloadAllButton from "../../../components/share/DownloadAllButton";
 import FileList from "../../../components/share/FileList";
 import showEnterPasswordModal from "../../../components/share/showEnterPasswordModal";
@@ -43,12 +44,8 @@ const useStyles = createStyles(() => ({
   logoMark: {
     width: 34,
     height: 34,
-    borderRadius: 12,
     display: "grid",
     placeItems: "center",
-    background: "#171717",
-    color: "#ffd84d",
-    fontWeight: 900,
   },
   card: {
     maxWidth: 900,
@@ -86,6 +83,8 @@ const Share = ({ shareId }: { shareId: string }) => {
   const [share, setShare] = useState<ShareType>();
   const t = useTranslate();
   const { classes } = useStyles();
+  const { locale } = useIntl();
+  const isZh = locale.startsWith("zh");
 
   const getShareToken = async (password?: string) => {
     await shareService
@@ -169,11 +168,13 @@ const Share = ({ shareId }: { shareId: string }) => {
 
       <Box className={classes.nav}>
         <Box className={classes.brand}>
-          <Box className={classes.logoMark}>S</Box>
-          <span>StellarTransfer</span>
+          <Box className={classes.logoMark}>
+            <Logo height={34} width={34} />
+          </Box>
+          <span>{isZh ? "星闪包" : "StellarTransfer"}</span>
         </Box>
         <Text size="sm" weight={800}>
-          星闪包
+          {isZh ? "文件快传" : "File Transfer"}
         </Text>
       </Box>
 
@@ -181,7 +182,7 @@ const Share = ({ shareId }: { shareId: string }) => {
         <Group position="apart" align="flex-start" className={classes.header}>
           <Box style={{ maxWidth: 620 }}>
             <Text size="xs" weight={900} transform="uppercase" color="dimmed">
-              Shared package
+              {isZh ? "共享文件" : "Shared package"}
             </Text>
             <Title order={2} mt={6} sx={{ lineHeight: 1.15 }}>
               {share?.name || share?.id || shareId}
