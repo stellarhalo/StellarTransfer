@@ -106,7 +106,6 @@ model ReverseShare {
   shareExpiration       DateTime
   maxShareSize          String
   sendEmailNotification Boolean
-  remainingUses         Int
   simplified            Boolean  @default(false)
   publicAccess          Boolean  @default(true)
 

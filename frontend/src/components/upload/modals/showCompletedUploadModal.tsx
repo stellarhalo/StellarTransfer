@@ -5,6 +5,7 @@ import moment from "moment";
 import { useRouter } from "next/router";
 import { FormattedMessage } from "react-intl";
 import { TbCheck } from "react-icons/tb";
+import useConfig from "../../../hooks/config.hook";
 import useTranslate from "../../../hooks/useTranslate.hook";
 import { CompletedShare } from "../../../types/share.type";
 import toast from "../../../utils/toast.util";
@@ -39,12 +40,14 @@ const Body = ({ share }: { share: CompletedShare }) => {
   const modals = useModals();
   const router = useRouter();
   const t = useTranslate();
+  const config = useConfig();
 
   const isReverseShare = !!router.query["reverseShareToken"];
+  const shareIdLength = parseInt(config.get("share.shareIdLength")) || 8;
 
   const link = `${window.location.origin}/s/${share.id}`;
-  const pickupCode = share.id.slice(0, 8);
-  const codeParts = share.id.slice(0, 8).toUpperCase().padEnd(8, "0").split("");
+  const pickupCode = share.id.slice(0, shareIdLength);
+  const codeParts = share.id.slice(0, shareIdLength).toUpperCase().padEnd(shareIdLength, "0").split("");
 
   return (
     <Stack
@@ -84,7 +87,7 @@ const Body = ({ share }: { share: CompletedShare }) => {
       >
         <CopyTextField link={link} />
         <Text size="xs" color="dimmed" mt={14} weight={700}>
-          Share code
+          <FormattedMessage id="share.code" />
         </Text>
         <Group
           spacing={8}

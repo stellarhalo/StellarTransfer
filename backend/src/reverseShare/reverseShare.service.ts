@@ -47,7 +47,6 @@ export class ReverseShareService {
     const reverseShare = await this.prisma.reverseShare.create({
       data: {
         shareExpiration: expirationDate,
-        remainingUses: data.maxUseCount,
         maxShareSize: data.maxShareSize,
         sendEmailNotification: data.sendEmailNotification,
         simplified: data.simplified,
@@ -92,9 +91,8 @@ export class ReverseShareService {
     if (!reverseShare) return false;
 
     const isExpired = new Date() > reverseShare.shareExpiration;
-    const remainingUsesExceeded = reverseShare.remainingUses <= 0;
 
-    return !(isExpired || remainingUsesExceeded);
+    return !isExpired;
   }
 
   async remove(id: string) {

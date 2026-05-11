@@ -1,10 +1,8 @@
 import {
   Body,
   Controller,
-  FileTypeValidator,
   Get,
   Param,
-  ParseFilePipe,
   Patch,
   Post,
   UploadedFile,
@@ -63,11 +61,7 @@ export class ConfigController {
   @UseInterceptors(FileInterceptor("file"))
   @UseGuards(JwtGuard, AdministratorGuard)
   async uploadLogo(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [new FileTypeValidator({ fileType: "image/png" })],
-      }),
-    )
+    @UploadedFile()
     file: Express.Multer.File,
   ) {
     return await this.logoService.create(file.buffer);

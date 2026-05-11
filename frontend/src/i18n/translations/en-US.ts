@@ -389,6 +389,7 @@ export default {
   "share.notify.download-all-preparing":
     "The share is being prepared. Please try again in a few minutes.",
 
+  "share.code": "Share code",
   "share.modal.file-link": "File link",
   "share.table.name": "Name",
   "share.table.size": "Size",

@@ -110,7 +110,6 @@ const uploadFile = async (
 const createReverseShare = async (
   shareExpiration: string,
   maxShareSize: number,
-  maxUseCount: number,
   sendEmailNotification: boolean,
   simplified: boolean,
   publicAccess: boolean,
@@ -119,7 +118,6 @@ const createReverseShare = async (
     await api.post("reverseShares", {
       shareExpiration,
       maxShareSize: maxShareSize.toString(),
-      maxUseCount,
       sendEmailNotification,
       simplified,
       publicAccess,

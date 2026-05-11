@@ -1,6 +1,6 @@
 import { Button, Center, createStyles, Group, Text } from "@mantine/core";
 import { Dropzone as MantineDropzone } from "@mantine/dropzone";
-import { ForwardedRef, useRef } from "react";
+import { ForwardedRef, useRef, useState } from "react";
 import { TbCloudUpload, TbInbox, TbPlus, TbUpload } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
 import useTranslate from "../../hooks/useTranslate.hook";
@@ -64,16 +64,11 @@ const useStyles = createStyles((theme) => ({
     color: "#18191c",
     boxShadow: "0 22px 60px rgba(21, 34, 48, 0.2)",
     transition: "transform 160ms ease, box-shadow 160ms ease",
+    cursor: "pointer",
 
     "&:hover": {
       transform: "translateY(-2px)",
       boxShadow: "0 26px 70px rgba(21, 34, 48, 0.26)",
-    },
-
-    [theme.fn.smallerThan("xs")]: {
-      height: 76,
-      gap: 12,
-      padding: "12px",
     },
   },
 
@@ -86,6 +81,29 @@ const useStyles = createStyles((theme) => ({
     borderRadius: "50%",
     background: "#f8f8f8",
     color: "#0b0d10",
+    transition: "all 300ms ease",
+  },
+
+  "@global": {
+    "@keyframes wrappingPulse": {
+      "0%": { transform: "scale(1) rotate(0deg)" },
+      "25%": { transform: "scale(1.1) rotate(-5deg)" },
+      "50%": { transform: "scale(1.15) rotate(5deg)" },
+      "75%": { transform: "scale(1.1) rotate(-3deg)" },
+      "100%": { transform: "scale(1) rotate(0deg)" },
+    },
+    "@keyframes boxOpenShake": {
+      "0%": { transform: "translateX(0)" },
+      "20%": { transform: "translateX(-4px) rotate(-2deg)" },
+      "40%": { transform: "translateX(4px) rotate(2deg)" },
+      "60%": { transform: "translateX(-3px) rotate(-1deg)" },
+      "80%": { transform: "translateX(3px) rotate(1deg)" },
+      "100%": { transform: "translateX(0)" },
+    },
+  },
+
+  transferPlusAnimated: {
+    animation: "wrappingPulse 600ms ease-out",
   },
 
   transferText: {
@@ -129,15 +147,15 @@ const useStyles = createStyles((theme) => ({
     background: "#f1f1f1",
     color: "#34363a",
     fontWeight: 800,
+    transition: "all 300ms ease",
 
     "&:hover": {
       background: "#e7e7e7",
     },
+  },
 
-    [theme.fn.smallerThan("xs")]: {
-      width: 104,
-      height: 48,
-    },
+  transferReceiveAnimated: {
+    animation: "boxOpenShake 500ms ease-out",
   },
 }));
 
@@ -162,11 +180,21 @@ const Dropzone = ({
 
   const { classes } = useStyles();
   const openRef = useRef<() => void>();
+  const [isAddHovered, setIsAddHovered] = useState(false);
+  const [isReceiveHovered, setIsReceiveHovered] = useState(false);
 
   const dropzoneContent =
     variant == "stellarTransfer" ? (
-      <div className={classes.transferCard}>
-        <div className={classes.transferPlus}>
+      <div
+        className={classes.transferCard}
+        onMouseEnter={() => setIsAddHovered(true)}
+        onMouseLeave={() => setIsAddHovered(false)}
+      >
+        <div
+          className={`${classes.transferPlus} ${
+            isAddHovered ? classes.transferPlusAnimated : ""
+          }`}
+        >
           <TbPlus size={34} strokeWidth={3} />
         </div>
         <div className={classes.transferText}>
@@ -232,7 +260,9 @@ const Dropzone = ({
       </MantineDropzone>
       {variant == "stellarTransfer" && (
         <Button
-          className={classes.transferReceive}
+          className={`${classes.transferReceive} ${
+            isReceiveHovered ? classes.transferReceiveAnimated : ""
+          }`}
           leftIcon={<TbInbox size={18} />}
           disabled={isUploading}
           onClick={(event) => {
@@ -240,6 +270,8 @@ const Dropzone = ({
             event.stopPropagation();
             onReceive?.();
           }}
+          onMouseEnter={() => setIsReceiveHovered(true)}
+          onMouseLeave={() => setIsReceiveHovered(false)}
         >
           {receiveLabel ?? "接受文件"}
         </Button>

@@ -95,7 +95,7 @@ const HOME_COPY = {
     panelTitle: "文件传输",
     returnHome: "返回添加文件",
     copyLink: "复制链接",
-    copyCodeHint: "点击拷贝 8 位取件码",
+    copyCodeHint: "点击拷贝 {length} 位取件码",
     codeCopied: "已复制该取件码",
     fileCount: "共 {count} 个文件",
     totalPrefix: "共",
@@ -124,7 +124,7 @@ const HOME_COPY = {
     panelTitle: "File Transfer",
     returnHome: "Back to Add File",
     copyLink: "Copy Link",
-    copyCodeHint: "Click to copy the 8-character pickup code",
+    copyCodeHint: "Click to copy the {length}-character pickup code",
     codeCopied: "Pickup code copied",
     fileCount: "{count} files",
     totalPrefix: "Total",
@@ -672,13 +672,23 @@ const Upload = ({
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [isUploading, setisUploading] = useState(false);
   const [completedShare, setCompletedShare] = useState<CompletedShare>();
-  const language = locale === "en-US" ? "en-US" : "zh-CN";
-  const homeText = language === "en-US" ? HOME_COPY.en : HOME_COPY.zh;
+  const [language, setLanguage] = useState<string>("en-US");
+  const [mounted, setMounted] = useState(false);
+  const homeText = mounted
+    ? (language.startsWith("zh") ? HOME_COPY.zh : HOME_COPY.en)
+    : HOME_COPY.en;
+
+  useEffect(() => {
+    const match = document.cookie.match(/language=([^;]+)/);
+    const lang = match ? match[1] : "en-US";
+    setLanguage(lang);
+    setMounted(true);
+  }, []);
 
   const toggleLanguage = () => {
-    const nextLanguage = language === "en-US" ? "zh-CN" : "en-US";
+    const nextLanguage = language.startsWith("zh") ? "en-US" : "zh-CN";
     i18nUtil.setLanguageCookie(nextLanguage);
-    location.reload();
+    window.location.reload();
   };
 
   useConfirmLeave({
@@ -810,6 +820,7 @@ const Upload = ({
       children: (
         <ReceiveCodeForm
           labels={homeText}
+          shareIdLength={parseInt(config.get("share.shareIdLength")) || 8}
           onSubmit={(code) => router.push(`/share/${code}`)}
         />
       ),
@@ -1017,6 +1028,7 @@ const Upload = ({
 
 type ReceiveCodeFormProps = {
   labels: HomeCopy;
+  shareIdLength: number;
   // eslint-disable-next-line no-unused-vars
   onSubmit(code: string): void;
 };
@@ -1183,12 +1195,13 @@ const HomepageUploadPanel = ({
   });
 
   if (completedShare) {
+    const shareIdLength = options.shareIdLength || 8;
     const link = `${window.location.origin}/s/${completedShare.id}`;
-    const pickupCode = completedShare.id.slice(0, 8);
+    const pickupCode = completedShare.id.slice(0, shareIdLength);
     const codeParts = completedShare.id
-      .slice(0, 8)
+      .slice(0, shareIdLength)
       .toUpperCase()
-      .padEnd(8, "0")
+      .padEnd(shareIdLength, "0")
       .split("");
 
     const returnHome = () => {
@@ -1233,7 +1246,7 @@ const HomepageUploadPanel = ({
           </Button>
           <Divider />
           <Text size="sm" color="dimmed" weight={700}>
-            {labels.copyCodeHint}
+            {labels.copyCodeHint.replace("{length}", shareIdLength.toString())}
           </Text>
           <Group
             spacing={8}
@@ -1537,7 +1550,7 @@ const HomepageUploadPanel = ({
   );
 };
 
-const ReceiveCodeForm = ({ labels, onSubmit }: ReceiveCodeFormProps) => {
+const ReceiveCodeForm = ({ labels, shareIdLength, onSubmit }: ReceiveCodeFormProps) => {
   const [code, setCode] = useState("");
 
   return (
@@ -1564,7 +1577,7 @@ const ReceiveCodeForm = ({ labels, onSubmit }: ReceiveCodeFormProps) => {
         </Text>
         <PinInput
           autoFocus
-          length={8}
+          length={shareIdLength}
           size="lg"
           radius="md"
           value={code}

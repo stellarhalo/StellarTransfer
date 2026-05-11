@@ -60,7 +60,6 @@ const Body = ({
   const form = useForm({
     initialValues: {
       maxShareSize: 104857600,
-      maxUseCount: 1,
       sendEmailNotification: false,
       expiration_num: 1,
       expiration_unit: "-days",
@@ -69,11 +68,9 @@ const Body = ({
     },
     validate: yupResolver(
       yup.object().shape({
-        maxUseCount: yup
+        maxShareSize: yup
           .number()
-          .typeError(t("common.error.invalid-number"))
           .min(1, t("common.error.number-too-small", { min: 1 }))
-          .max(1000, t("common.error.number-too-large", { max: 1000 }))
           .required(t("common.error.field-required")),
       }),
     ),
@@ -112,7 +109,6 @@ const Body = ({
       .createReverseShare(
         values.expiration_num + values.expiration_unit,
         values.maxShareSize,
-        values.maxUseCount,
         values.sendEmailNotification,
         values.simplified,
         values.publicAccess,
@@ -212,15 +208,6 @@ const Body = ({
             label={t("account.reverseShares.modal.max-size.label")}
             value={form.values.maxShareSize}
             onChange={(number) => form.setFieldValue("maxShareSize", number)}
-          />
-          <NumberInput
-            min={1}
-            max={1000}
-            precision={0}
-            variant="filled"
-            label={t("account.reverseShares.modal.max-use.label")}
-            description={t("account.reverseShares.modal.max-use.description")}
-            {...form.getInputProps("maxUseCount")}
           />
           {showSendEmailNotificationOption && (
             <Switch

@@ -123,18 +123,26 @@ const useStyles = createStyles(() => ({
     },
   },
   input: {
-    input: {
+    width: "100%",
+    "& .mantine-TextInput-input": {
       minHeight: 48,
       borderColor: "#ead27a",
+      borderWidth: 1.5,
       borderRadius: 8,
+      backgroundColor: "#fff",
       "&:focus": {
         borderColor: "#d8ad10",
       },
     },
-    label: {
-      fontWeight: 700,
-      color: "#222",
-      marginBottom: 6,
+    "& .mantine-PasswordInput-input": {
+      minHeight: 48,
+      borderColor: "#ead27a",
+      borderWidth: 1.5,
+      borderRadius: 8,
+      backgroundColor: "#fff",
+      "&:focus": {
+        borderColor: "#d8ad10",
+      },
     },
   },
   primaryButton: {
@@ -248,20 +256,20 @@ const SignUpForm = () => {
             )}
           >
             <TextInput
-              className={classes.input}
+              classNames={{ input: classes.input }}
               label={t("signup.input.username")}
               placeholder={t("signup.input.username.placeholder")}
               {...form.getInputProps("username")}
             />
             <TextInput
-              className={classes.input}
+              classNames={{ input: classes.input }}
               label={t("signup.input.email")}
               placeholder={t("signup.input.email.placeholder")}
               mt="md"
               {...form.getInputProps("email")}
             />
             <PasswordInput
-              className={classes.input}
+              classNames={{ input: classes.input }}
               label={t("signin.input.password")}
               placeholder={t("signin.input.password.placeholder")}
               mt="md"

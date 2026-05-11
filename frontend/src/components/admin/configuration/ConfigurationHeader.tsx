@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import Link from "next/link";
 import { Dispatch, SetStateAction } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import useConfig from "../../../hooks/config.hook";
 
 const ConfigurationHeader = ({
