@@ -37,7 +37,14 @@ import defaultConfigVariables from "../config/defaultConfig";
 
 const excludeDefaultLayoutRoutes = [
   "/admin/config/[category]",
+  "/admin",
+  "/admin/users",
+  "/admin/shares",
+  "/account",
+  "/account/shares",
+  "/account/reverseShares",
   "/upload",
+  "/help",
   "/auth/signIn",
   "/auth/signUp",
   "/share/[shareId]",

@@ -1,9 +1,46 @@
-import { ActionIcon, Badge, Box, Group, Skeleton, Table } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  createStyles,
+  Group,
+  Skeleton,
+  Table,
+} from "@mantine/core";
 import { useModals } from "@mantine/modals";
 import { TbCheck, TbEdit, TbTrash } from "react-icons/tb";
 import User from "../../../types/user.type";
 import showUpdateUserModal from "./showUpdateUserModal";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
+
+const useStyles = createStyles(() => ({
+  table: {
+    "thead tr th": {
+      borderBottom: 0,
+      color: "#777777",
+      fontSize: 14,
+      fontWeight: 900,
+      padding: "16px 22px",
+    },
+    "tbody tr:hover": {
+      background: "#fafafa",
+    },
+    "tbody tr td": {
+      borderBottom: "1px solid #f0f0f0",
+      padding: "18px 22px",
+      color: "#222222",
+      fontWeight: 700,
+    },
+  },
+  actionIcon: {
+    borderRadius: 12,
+    background: "#f5f5f5",
+    color: "#111111",
+    "&:hover": {
+      background: "#ffd84d",
+    },
+  },
+}));
 
 const ManageUserTable = ({
   users,
@@ -16,11 +53,12 @@ const ManageUserTable = ({
   deleteUser: (user: User) => void;
   isLoading: boolean;
 }) => {
+  const { classes } = useStyles();
   const modals = useModals();
 
   return (
     <Box sx={{ display: "block", overflowX: "auto" }}>
-      <Table verticalSpacing="sm">
+      <Table className={classes.table} verticalSpacing="sm">
         <thead>
           <tr>
             <th>
@@ -52,9 +90,8 @@ const ManageUserTable = ({
                     <Group position="right">
                       {user.isLdap ? null : (
                         <ActionIcon
-                          variant="light"
-                          color="primary"
-                          size="sm"
+                          className={classes.actionIcon}
+                          size={34}
                           onClick={() =>
                             showUpdateUserModal(modals, user, getUsers)
                           }
@@ -63,9 +100,9 @@ const ManageUserTable = ({
                         </ActionIcon>
                       )}
                       <ActionIcon
-                        variant="light"
+                        variant="subtle"
                         color="red"
-                        size="sm"
+                        size={34}
                         onClick={() => deleteUser(user)}
                       >
                         <TbTrash />

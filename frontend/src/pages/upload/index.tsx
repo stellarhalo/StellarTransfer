@@ -15,7 +15,6 @@ import {
   NumberInput,
   Paper,
   PasswordInput,
-  PinInput,
   Progress,
   Select,
   Stack,
@@ -35,7 +34,6 @@ import pLimit from "p-limit";
 import { useEffect, useRef, useState } from "react";
 import {
   TbAlertCircle,
-  TbArrowRight,
   TbBell,
   TbCloud,
   TbCheck,
@@ -43,8 +41,6 @@ import {
   TbHistory,
   TbLanguage,
   TbLogin,
-  TbMailbox,
-  TbShieldCheck,
 } from "react-icons/tb";
 import { FormattedMessage, useIntl } from "react-intl";
 import Logo from "../../components/Logo";
@@ -83,7 +79,10 @@ const HOME_COPY = {
     language: "EN",
     scene: ["星", "闪", "包"],
     addFile: "添加文件",
+    addFileHover: "闪一下～",
+    addFileHoverSub: "或者添加文件夹",
     receiveFile: "接受文件",
+    receivePlaceholder: "请输入取件码",
     footer: "帮助与反馈 | 服务协议 | 星闪包提供支持",
     mobileFooter: "星闪包 | 添加文件或输入取件码",
     receiveTitle: "输入取件码",
@@ -111,7 +110,10 @@ const HOME_COPY = {
     language: "中",
     scene: ["STAR", "TRANS", "FER"],
     addFile: "Add File",
+    addFileHover: "Flash now~",
+    addFileHoverSub: "or add a folder",
     receiveFile: "Receive File",
+    receivePlaceholder: "Enter pickup code",
     footer: "Help & Feedback | Terms | Powered by StellarTransfer",
     mobileFooter: "StellarTransfer | Add files or enter pickup code",
     receiveTitle: "Enter Pickup Code",
@@ -675,7 +677,9 @@ const Upload = ({
   const [language, setLanguage] = useState<string>("en-US");
   const [mounted, setMounted] = useState(false);
   const homeText = mounted
-    ? (language.startsWith("zh") ? HOME_COPY.zh : HOME_COPY.en)
+    ? language.startsWith("zh")
+      ? HOME_COPY.zh
+      : HOME_COPY.en
     : HOME_COPY.en;
 
   useEffect(() => {
@@ -811,20 +815,9 @@ const Upload = ({
     }
   };
 
-  const showReceiveModal = () => {
-    modals.openModal({
-      title: homeText.receiveTitle,
-      centered: true,
-      radius: "md",
-      size: 520,
-      children: (
-        <ReceiveCodeForm
-          labels={homeText}
-          shareIdLength={parseInt(config.get("share.shareIdLength")) || 8}
-          onSubmit={(code) => router.push(`/share/${code}`)}
-        />
-      ),
-    });
+  const openReceivedShare = (code?: string) => {
+    const normalizedCode = code?.trim();
+    if (normalizedCode) void router.push(`/share/${normalizedCode}`);
   };
 
   useEffect(() => {
@@ -988,11 +981,17 @@ const Upload = ({
           <div className={classes.uploadPanel}>
             <Dropzone
               title={homeText.addFile}
+              addHoverLabel={homeText.addFileHover}
+              addHoverSubLabel={homeText.addFileHoverSub}
               receiveLabel={homeText.receiveFile}
+              receivePlaceholder={homeText.receivePlaceholder}
+              receiveCodeLength={
+                parseInt(config.get("share.shareIdLength")) || 8
+              }
               maxShareSize={maxShareSize}
               onFilesChanged={handleDropzoneFilesChanged}
               isUploading={isUploading}
-              onReceive={showReceiveModal}
+              onReceive={openReceivedShare}
               variant="stellarTransfer"
             />
           </div>
@@ -1024,13 +1023,6 @@ const Upload = ({
       )}
     </>
   );
-};
-
-type ReceiveCodeFormProps = {
-  labels: HomeCopy;
-  shareIdLength: number;
-  // eslint-disable-next-line no-unused-vars
-  onSubmit(code: string): void;
 };
 
 type HomepageUploadPanelProps = {
@@ -1547,88 +1539,6 @@ const HomepageUploadPanel = ({
         </Stack>
       </form>
     </Paper>
-  );
-};
-
-const ReceiveCodeForm = ({ labels, shareIdLength, onSubmit }: ReceiveCodeFormProps) => {
-  const [code, setCode] = useState("");
-
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        const normalizedCode = code.trim();
-        if (normalizedCode) onSubmit(normalizedCode);
-      }}
-    >
-      <Stack
-        spacing={26}
-        sx={{
-          minHeight: 360,
-          padding: "10px 0 18px",
-        }}
-      >
-        <Group spacing="sm">
-          <TbMailbox size={22} />
-          <Text weight={900}>{labels.receiveHeading}</Text>
-        </Group>
-        <Text color="dimmed" size="sm">
-          {labels.receiveDescription}
-        </Text>
-        <PinInput
-          autoFocus
-          length={shareIdLength}
-          size="lg"
-          radius="md"
-          value={code}
-          onChange={setCode}
-          sx={{
-            justifyContent: "space-between",
-            gap: 8,
-
-            input: {
-              width: 50,
-              height: 64,
-              border: 0,
-              background: "#fff0a8",
-              color: "#171717",
-              fontSize: 24,
-              fontWeight: 900,
-              textTransform: "none",
-              WebkitTextSecurity: "none",
-              textSecurity: "none",
-              caretColor: "#171717",
-
-              "&::placeholder": {
-                color: "transparent",
-              },
-
-              "&:focus": {
-                border: "2px solid #e8bd18",
-                background: "#ffe77c",
-              },
-            },
-          }}
-        />
-        <Button
-          type="submit"
-          color="dark"
-          h={52}
-          miw={160}
-          radius="xl"
-          rightIcon={<TbArrowRight size={18} />}
-        >
-          {labels.receiveSubmit}
-        </Button>
-        <Divider />
-        <Group spacing={8}>
-          <TbShieldCheck size={18} />
-          <Text size="xs" color="dimmed">
-            {labels.receiveSecurity}
-          </Text>
-        </Group>
-      </Stack>
-    </form>
   );
 };
 

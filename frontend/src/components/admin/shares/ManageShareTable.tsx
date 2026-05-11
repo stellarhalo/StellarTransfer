@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Box,
+  createStyles,
   Group,
   MediaQuery,
   Skeleton,
@@ -19,6 +20,35 @@ import { byteToHumanSizeString } from "../../../utils/fileSize.util";
 import toast from "../../../utils/toast.util";
 import showShareLinkModal from "../../account/showShareLinkModal";
 
+const useStyles = createStyles(() => ({
+  table: {
+    "thead tr th": {
+      borderBottom: 0,
+      color: "#777777",
+      fontSize: 14,
+      fontWeight: 900,
+      padding: "16px 22px",
+    },
+    "tbody tr:hover": {
+      background: "#fafafa",
+    },
+    "tbody tr td": {
+      borderBottom: "1px solid #f0f0f0",
+      padding: "18px 22px",
+      color: "#222222",
+      fontWeight: 700,
+    },
+  },
+  actionIcon: {
+    borderRadius: 12,
+    background: "#f5f5f5",
+    color: "#111111",
+    "&:hover": {
+      background: "#ffd84d",
+    },
+  },
+}));
+
 const ManageShareTable = ({
   shares,
   deleteShare,
@@ -28,6 +58,7 @@ const ManageShareTable = ({
   deleteShare: (share: MyShare) => void;
   isLoading: boolean;
 }) => {
+  const { classes } = useStyles();
   const modals = useModals();
   const clipboard = useClipboard();
   const config = useConfig();
@@ -35,7 +66,7 @@ const ManageShareTable = ({
 
   return (
     <Box sx={{ display: "block", overflowX: "auto" }}>
-      <Table verticalSpacing="sm">
+      <Table className={classes.table} verticalSpacing="sm">
         <thead>
           <tr>
             <th>
@@ -83,9 +114,8 @@ const ManageShareTable = ({
                   <td>
                     <Group position="right">
                       <ActionIcon
-                        color="victoria"
-                        variant="light"
-                        size={25}
+                        className={classes.actionIcon}
+                        size={34}
                         onClick={() => {
                           if (window.isSecureContext) {
                             clipboard.copy(
@@ -100,9 +130,9 @@ const ManageShareTable = ({
                         <TbLink />
                       </ActionIcon>
                       <ActionIcon
-                        variant="light"
+                        variant="subtle"
                         color="red"
-                        size="sm"
+                        size={34}
                         onClick={() => deleteShare(share)}
                       >
                         <TbTrash />

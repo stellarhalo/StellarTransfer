@@ -1,4 +1,5 @@
 import {
+  createStyles,
   NumberInput,
   PasswordInput,
   Stack,
@@ -12,6 +13,36 @@ import { stringToTimespan, timespanToString } from "../../../utils/date.util";
 import FileSizeInput from "../../core/FileSizeInput";
 import TimespanInput from "../../core/TimespanInput";
 
+const useStyles = createStyles(() => ({
+  input: {
+    input: {
+      minHeight: 44,
+      borderRadius: 14,
+      borderColor: "#e5e5e5",
+      fontWeight: 700,
+      "&:focus": {
+        borderColor: "#ffd84d",
+      },
+    },
+    textarea: {
+      borderRadius: 14,
+      borderColor: "#e5e5e5",
+      fontWeight: 700,
+      "&:focus": {
+        borderColor: "#ffd84d",
+      },
+    },
+  },
+  switch: {
+    input: {
+      "&:checked + *": {
+        backgroundColor: "#ffd84d",
+        borderColor: "#ffd84d",
+      },
+    },
+  },
+}));
+
 const AdminConfigInput = ({
   configVariable,
   updateConfigVariable,
@@ -19,6 +50,7 @@ const AdminConfigInput = ({
   configVariable: AdminConfig;
   updateConfigVariable: (variable: UpdateConfig) => void;
 }) => {
+  const { classes } = useStyles();
   const form = useForm({
     initialValues: {
       stringValue: configVariable.value ?? configVariable.defaultValue,
@@ -41,6 +73,7 @@ const AdminConfigInput = ({
       {configVariable.type == "string" &&
         (configVariable.obscured ? (
           <PasswordInput
+            className={classes.input}
             autoComplete="new-password"
             style={{
               width: "100%",
@@ -51,6 +84,7 @@ const AdminConfigInput = ({
           />
         ) : (
           <TextInput
+            className={classes.input}
             style={{
               width: "100%",
             }}
@@ -63,6 +97,7 @@ const AdminConfigInput = ({
 
       {configVariable.type == "text" && (
         <Textarea
+          className={classes.input}
           style={{
             width: "100%",
           }}
@@ -75,6 +110,7 @@ const AdminConfigInput = ({
       )}
       {configVariable.type == "number" && (
         <NumberInput
+          className={classes.input}
           {...form.getInputProps("numberValue")}
           disabled={!configVariable.allowEdit}
           placeholder={configVariable.defaultValue}
@@ -94,6 +130,7 @@ const AdminConfigInput = ({
       {configVariable.type == "boolean" && (
         <>
           <Switch
+            className={classes.switch}
             disabled={!configVariable.allowEdit}
             {...form.getInputProps("booleanValue", { type: "checkbox" })}
             onChange={(e) => onValueChange(configVariable, e.target.checked)}

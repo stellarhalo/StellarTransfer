@@ -1,7 +1,7 @@
 import { Button, Center, createStyles, Group, Text } from "@mantine/core";
 import { Dropzone as MantineDropzone } from "@mantine/dropzone";
-import { ForwardedRef, useRef, useState } from "react";
-import { TbCloudUpload, TbInbox, TbPlus, TbUpload } from "react-icons/tb";
+import { ForwardedRef, useEffect, useRef, useState } from "react";
+import { TbCloudUpload, TbPlus, TbUpload } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
 import useTranslate from "../../hooks/useTranslate.hook";
 import { FileUpload } from "../../types/File.type";
@@ -17,8 +17,13 @@ const useStyles = createStyles((theme) => ({
   transferWrapper: {
     position: "relative",
     zIndex: 5,
-    width: "min(468px, calc(100vw - 32px))",
+    width: "min(360px, calc(100vw - 32px))",
     marginBottom: 0,
+    transition: "width 360ms cubic-bezier(0.22, 1, 0.36, 1)",
+  },
+
+  transferWrapperReceiveActive: {
+    width: "min(360px, calc(100vw - 32px))",
   },
 
   dropzone: {
@@ -27,7 +32,8 @@ const useStyles = createStyles((theme) => ({
   },
 
   transferDropzone: {
-    border: 0,
+    boxSizing: "border-box",
+    border: "3px solid transparent",
     padding: 0,
     background: "transparent",
     overflow: "visible",
@@ -50,76 +56,149 @@ const useStyles = createStyles((theme) => ({
   },
 
   transferCard: {
+    position: "relative",
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
     width: "100%",
-    height: 88,
-    gap: 18,
-    padding: "14px 16px 14px 22px",
+    height: 72,
+    gap: 10,
+    padding: "8px 10px 8px 20px",
     borderRadius: 999,
-    background:
-      theme.colorScheme === "dark"
-        ? "rgba(255, 255, 255, 0.94)"
-        : "rgba(255, 255, 255, 0.96)",
-    color: "#18191c",
-    boxShadow: "0 22px 60px rgba(21, 34, 48, 0.2)",
-    transition: "transform 160ms ease, box-shadow 160ms ease",
+    background: "#ffffff",
+    color: "#000000",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+    transition:
+      "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1)",
     cursor: "pointer",
+    pointerEvents: "auto",
 
     "&:hover": {
       transform: "translateY(-2px)",
-      boxShadow: "0 26px 70px rgba(21, 34, 48, 0.26)",
+      boxShadow: "0 10px 28px rgba(0, 0, 0, 0.12)",
     },
+  },
+
+  transferAddAction: {
+    flex: "1 1 196px",
+    minWidth: 0,
+    height: 56,
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    borderRadius: 999,
+    overflow: "hidden",
+    transition:
+      "flex-basis 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+    paddingRight: 118,
+  },
+
+  transferAddActionHovered: {
+    transform: "scale(1.02)",
+  },
+
+  transferAddActionReceiveActive: {
+    flexBasis: 170,
+    opacity: 0.95,
   },
 
   transferPlus: {
     display: "grid",
     placeItems: "center",
-    flex: "0 0 52px",
-    width: 52,
-    height: 52,
+    flex: "0 0 28px",
+    width: 28,
+    height: 28,
     borderRadius: "50%",
-    background: "#f8f8f8",
-    color: "#0b0d10",
-    transition: "all 300ms ease",
+    background: "transparent",
+    color: "#000000",
+    transition:
+      "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
   },
 
-  "@global": {
-    "@keyframes wrappingPulse": {
-      "0%": { transform: "scale(1) rotate(0deg)" },
-      "25%": { transform: "scale(1.1) rotate(-5deg)" },
-      "50%": { transform: "scale(1.15) rotate(5deg)" },
-      "75%": { transform: "scale(1.1) rotate(-3deg)" },
-      "100%": { transform: "scale(1) rotate(0deg)" },
-    },
-    "@keyframes boxOpenShake": {
-      "0%": { transform: "translateX(0)" },
-      "20%": { transform: "translateX(-4px) rotate(-2deg)" },
-      "40%": { transform: "translateX(4px) rotate(2deg)" },
-      "60%": { transform: "translateX(-3px) rotate(-1deg)" },
-      "80%": { transform: "translateX(3px) rotate(1deg)" },
-      "100%": { transform: "translateX(0)" },
-    },
-  },
-
-  transferPlusAnimated: {
-    animation: "wrappingPulse 600ms ease-out",
+  transferPlusHovered: {
+    transform: "translateX(2px) scale(1.08)",
   },
 
   transferText: {
-    flex: 1,
+    position: "relative",
+    flex: "0 1 auto",
     minWidth: 0,
+    height: 42,
+    minInlineSize: 150,
+  },
+
+  transferLabelRow: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "50%",
+    display: "flex",
+    alignItems: "center",
+    minWidth: 0,
+    opacity: 1,
+    transform: "translateY(-50%)",
+    transition: "opacity 220ms ease, transform 260ms ease",
+  },
+
+  transferLabelRowHoverOut: {
+    opacity: 0,
+    transform: "translateY(calc(-50% - 4px))",
+  },
+
+  transferClickLabelRow: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: -1,
+    opacity: 0,
+    transform: "translateY(4px)",
+    transition: "opacity 180ms ease, transform 180ms ease",
+  },
+
+  transferClickLabelRowVisible: {
+    opacity: 1,
+    transform: "translateY(0)",
   },
 
   transferTitle: {
-    color: "#17191d",
-    fontSize: 26,
+    position: "relative",
+    display: "inline-block",
+    color: "#000000",
+    fontSize: 24,
     lineHeight: 1.05,
-    fontWeight: 900,
+    fontWeight: 800,
+    letterSpacing: 0,
+    whiteSpace: "nowrap",
+    transition:
+      "font-weight 180ms ease, letter-spacing 180ms ease, transform 180ms ease",
 
     [theme.fn.smallerThan("xs")]: {
-      fontSize: 22,
+      fontSize: 20,
     },
+  },
+
+  transferTitleActive: {
+    fontWeight: 800,
+    letterSpacing: "0.2px",
+  },
+
+  transferPhaseTitle: {
+    animation: "transferTextSwap 260ms cubic-bezier(0.22, 1, 0.36, 1)",
+  },
+
+  transferBounceChar: {
+    display: "inline-block",
+    animation: "transferBounceChar 460ms cubic-bezier(0.2, 1.2, 0.36, 1)",
+  },
+
+  transferHoverSubTitle: {
+    marginTop: 4,
+    color: "#777777",
+    fontSize: 12,
+    lineHeight: 1,
+    fontWeight: 500,
+    letterSpacing: 0,
+    whiteSpace: "nowrap",
   },
 
   transferDescription: {
@@ -134,34 +213,168 @@ const useStyles = createStyles((theme) => ({
 
   transferReceive: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    zIndex: 8,
-    flex: "0 0 auto",
-    width: 126,
-    height: 56,
+    top: 12,
+    right: 10,
+    left: "calc(100% - 122px)",
+    zIndex: 3,
+    width: 112,
+    height: 48,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     paddingLeft: 0,
     paddingRight: 0,
     borderRadius: 999,
     border: 0,
-    background: "#f1f1f1",
-    color: "#34363a",
+    background: "#f3f3f3",
+    color: "#000000",
     fontWeight: 800,
-    transition: "all 300ms ease",
+    overflow: "hidden",
+    cursor: "pointer",
+    transition:
+      "left 420ms cubic-bezier(0.22, 1, 0.36, 1), width 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), background 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
 
     "&:hover": {
-      background: "#e7e7e7",
+      background: "#ffd84d",
     },
   },
 
   transferReceiveAnimated: {
-    animation: "boxOpenShake 500ms ease-out",
+    left: 8,
+    right: 10,
+    width: "auto",
+    background: "#ffffff",
+    border: "3px solid #ffd84d",
+    color: "#000000",
+    boxShadow: "0 10px 26px rgba(0, 0, 0, 0.12)",
+    transition:
+      "left 420ms cubic-bezier(0.22, 1, 0.36, 1) 1000ms, width 360ms cubic-bezier(0.22, 1, 0.36, 1) 1000ms, opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), background 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1) 1000ms, box-shadow 260ms ease 1000ms",
+    animation: "receiveMorphFill 1420ms cubic-bezier(0.22, 1, 0.36, 1)",
+
+    "&:hover": {
+      background: "#ffffff",
+    },
+  },
+
+  transferReceiveFocused: {
+    left: 8,
+    right: 10,
+    width: "auto",
+    background: "#ffffff",
+    border: "3px solid #ffd84d",
+    color: "#000000",
+    boxShadow: "0 10px 26px rgba(0, 0, 0, 0.12)",
+    transition:
+      "left 420ms cubic-bezier(0.22, 1, 0.36, 1), width 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), background 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease",
+
+    "&:hover": {
+      background: "#ffffff",
+    },
+  },
+
+  transferReceiveDimmed: {
+    opacity: 0.9,
+  },
+
+  transferReceiveLabel: {
+    display: "block",
+    opacity: 1,
+    transform: "translateY(0)",
+    transition: "opacity 180ms ease, transform 180ms ease",
+  },
+
+  transferReceiveLabelHidden: {
+    opacity: 0,
+    transform: "translateY(-4px)",
+    transitionDelay: "1000ms",
+  },
+
+  transferReceiveLabelFocusedHidden: {
+    opacity: 0,
+    transform: "translateY(-4px)",
+    transitionDelay: "0ms",
+  },
+
+  transferReceiveInput: {
+    position: "absolute",
+    inset: "0 16px",
+    display: "flex",
+    alignItems: "center",
+    opacity: 0,
+    transform: "translateY(4px)",
+    transition: "opacity 140ms ease, transform 140ms ease",
+    pointerEvents: "none",
+  },
+
+  transferReceiveInputVisible: {
+    opacity: 1,
+    transform: "translateY(0)",
+    transition: "opacity 180ms ease 1150ms, transform 180ms ease 1150ms",
+    pointerEvents: "auto",
+  },
+
+  transferReceiveInputFocusedVisible: {
+    opacity: 1,
+    transform: "translateY(0)",
+    transition: "opacity 180ms ease, transform 180ms ease",
+    pointerEvents: "auto",
+  },
+
+  transferCaret: {
+    width: 1,
+    height: 18,
+    marginRight: 8,
+    background: "#000000",
+    animation: "receiveCaretBlink 600ms infinite",
+  },
+
+  transferPlaceholder: {
+    width: "100%",
+    border: 0,
+    outline: "none",
+    background: "transparent",
+    color: "#000000",
+    fontSize: 14,
+    fontWeight: 800,
+    whiteSpace: "nowrap",
+    caretColor: "#000000",
+
+    "&::placeholder": {
+      color: "#000000",
+      opacity: 1,
+    },
+  },
+
+  "@global": {
+    "@keyframes receiveMorphFill": {
+      "0%": { background: "#f3f3f3" },
+      "12%": { background: "#ffd84d" },
+      "70%": { background: "#ffd84d" },
+      "100%": { background: "#ffffff" },
+    },
+    "@keyframes receiveCaretBlink": {
+      "0%, 45%": { opacity: 1 },
+      "46%, 100%": { opacity: 0 },
+    },
+    "@keyframes transferTextSwap": {
+      "0%": { opacity: 0, transform: "translateY(4px)" },
+      "100%": { opacity: 1, transform: "translateY(0)" },
+    },
+    "@keyframes transferBounceChar": {
+      "0%": { opacity: 0, transform: "translateX(-10px) scale(0.86)" },
+      "62%": { opacity: 1, transform: "translateX(2px) scale(1.06)" },
+      "100%": { opacity: 1, transform: "translateX(0) scale(1)" },
+    },
   },
 }));
 
 const Dropzone = ({
   title,
+  addHoverLabel,
+  addHoverSubLabel,
   receiveLabel,
+  receivePlaceholder,
+  receiveCodeLength = 8,
   isUploading,
   maxShareSize,
   onFilesChanged,
@@ -169,39 +382,209 @@ const Dropzone = ({
   variant = "default",
 }: {
   title?: string;
+  addHoverLabel?: string;
+  addHoverSubLabel?: string;
   receiveLabel?: string;
+  receivePlaceholder?: string;
+  receiveCodeLength?: number;
   isUploading: boolean;
   maxShareSize: number;
   onFilesChanged: (files: FileUpload[]) => void;
-  onReceive?: () => void;
+  onReceive?: (code?: string) => void;
   variant?: "default" | "stellarTransfer";
 }) => {
   const t = useTranslate();
 
   const { classes } = useStyles();
   const openRef = useRef<() => void>();
+  const receiveInputRef = useRef<HTMLInputElement>(null);
   const [isAddHovered, setIsAddHovered] = useState(false);
   const [isReceiveHovered, setIsReceiveHovered] = useState(false);
+  const [isReceiveFocused, setIsReceiveFocused] = useState(false);
+  const [receiveCode, setReceiveCode] = useState("");
+  const [addHoverPhase, setAddHoverPhase] = useState<"flash" | "add">("flash");
+  const isReceiveActive = isReceiveHovered || isReceiveFocused;
+
+  useEffect(() => {
+    if (!isAddHovered) {
+      setAddHoverPhase("flash");
+      return;
+    }
+
+    setAddHoverPhase("flash");
+    const timeout = window.setTimeout(() => {
+      setAddHoverPhase("add");
+    }, 520);
+
+    return () => window.clearTimeout(timeout);
+  }, [isAddHovered]);
+
+  const addTitleText = title ?? t("upload.dropzone.title");
+  const focusReceiveInput = () => {
+    setIsAddHovered(false);
+    setIsReceiveFocused(true);
+    window.setTimeout(() => receiveInputRef.current?.focus(), 0);
+  };
+
+  const submitReceiveCode = (code: string) => {
+    const normalizedCode = code.trim();
+    if (!normalizedCode) return;
+    onReceive?.(normalizedCode);
+  };
+
+  const renderAddHoverTitle = () => {
+    if (addHoverPhase === "flash") return addHoverLabel ?? "闪一下～";
+
+    if (addTitleText.length <= 1) return addTitleText;
+
+    return (
+      <>
+        {addTitleText.slice(0, -1)}
+        <span className={classes.transferBounceChar}>
+          {addTitleText.slice(-1)}
+        </span>
+      </>
+    );
+  };
 
   const dropzoneContent =
     variant == "stellarTransfer" ? (
       <div
         className={classes.transferCard}
-        onMouseEnter={() => setIsAddHovered(true)}
-        onMouseLeave={() => setIsAddHovered(false)}
+        onMouseLeave={() => {
+          setIsAddHovered(false);
+          setIsReceiveHovered(false);
+        }}
       >
-        <div
-          className={`${classes.transferPlus} ${
-            isAddHovered ? classes.transferPlusAnimated : ""
-          }`}
+        <Group
+          className={`${classes.transferAddAction} ${
+            isAddHovered ? classes.transferAddActionHovered : ""
+          } ${isReceiveActive ? classes.transferAddActionReceiveActive : ""}`}
+          spacing={12}
+          noWrap
+          onMouseEnter={() => {
+            if (!isReceiveActive) setIsAddHovered(true);
+          }}
+          onMouseLeave={() => setIsAddHovered(false)}
         >
-          <TbPlus size={34} strokeWidth={3} />
-        </div>
-        <div className={classes.transferText}>
-          <Text className={classes.transferTitle}>
-            {title || <FormattedMessage id="upload.dropzone.title" />}
-          </Text>
-        </div>
+          <div
+            className={`${classes.transferPlus} ${
+              isAddHovered ? classes.transferPlusHovered : ""
+            }`}
+          >
+            <TbPlus size={28} strokeWidth={3} />
+          </div>
+          <div className={classes.transferText}>
+            <div
+              className={`${classes.transferLabelRow} ${
+                isAddHovered ? classes.transferLabelRowHoverOut : ""
+              }`}
+            >
+              <Text
+                className={`${classes.transferTitle} ${
+                  isAddHovered ? classes.transferTitleActive : ""
+                }`}
+              >
+                {title || <FormattedMessage id="upload.dropzone.title" />}
+              </Text>
+            </div>
+            <div
+              className={`${classes.transferClickLabelRow} ${
+                isAddHovered ? classes.transferClickLabelRowVisible : ""
+              }`}
+            >
+              <Text
+                key={addHoverPhase}
+                className={`${classes.transferTitle} ${classes.transferTitleActive}`}
+              >
+                <span className={classes.transferPhaseTitle}>
+                  {renderAddHoverTitle()}
+                </span>
+              </Text>
+              {addHoverSubLabel && (
+                <Text className={classes.transferHoverSubTitle}>
+                  {addHoverSubLabel}
+                </Text>
+              )}
+            </div>
+          </div>
+        </Group>
+        {onReceive && (
+          <div
+            role="button"
+            tabIndex={0}
+            className={`${classes.transferReceive} ${
+              isReceiveFocused
+                ? classes.transferReceiveFocused
+                : isReceiveHovered
+                  ? classes.transferReceiveAnimated
+                  : ""
+            } ${isAddHovered ? classes.transferReceiveDimmed : ""}`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!isUploading) focusReceiveInput();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                if (!isUploading) focusReceiveInput();
+              }
+            }}
+            onMouseEnter={() => {
+              setIsAddHovered(false);
+              setIsReceiveHovered(true);
+            }}
+          >
+            <span
+              className={`${classes.transferReceiveLabel} ${
+                isReceiveFocused
+                  ? classes.transferReceiveLabelFocusedHidden
+                  : isReceiveHovered
+                    ? classes.transferReceiveLabelHidden
+                    : ""
+              }`}
+            >
+              {receiveLabel ?? "接受文件"}
+            </span>
+            <span
+              className={`${classes.transferReceiveInput} ${
+                isReceiveFocused
+                  ? classes.transferReceiveInputFocusedVisible
+                  : isReceiveHovered
+                    ? classes.transferReceiveInputVisible
+                    : ""
+              }`}
+            >
+              <span className={classes.transferCaret} />
+              <input
+                ref={receiveInputRef}
+                className={classes.transferPlaceholder}
+                value={receiveCode}
+                placeholder={receivePlaceholder ?? "请输入取件码"}
+                maxLength={receiveCodeLength}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setReceiveCode(value);
+                  if (value.trim().length >= receiveCodeLength) {
+                    submitReceiveCode(value);
+                  }
+                }}
+                onFocus={() => setIsReceiveFocused(true)}
+                onBlur={() => {
+                  if (!receiveCode.trim()) setIsReceiveFocused(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitReceiveCode(receiveCode);
+                  }
+                }}
+              />
+            </span>
+          </div>
+        )}
       </div>
     ) : (
       <div style={{ pointerEvents: "none" }}>
@@ -223,7 +606,11 @@ const Dropzone = ({
   return (
     <div
       className={
-        variant == "stellarTransfer" ? classes.transferWrapper : classes.wrapper
+        variant == "stellarTransfer"
+          ? `${classes.transferWrapper} ${
+              isReceiveActive ? classes.transferWrapperReceiveActive : ""
+            }`
+          : classes.wrapper
       }
     >
       <MantineDropzone
@@ -258,24 +645,6 @@ const Dropzone = ({
       >
         {dropzoneContent}
       </MantineDropzone>
-      {variant == "stellarTransfer" && (
-        <Button
-          className={`${classes.transferReceive} ${
-            isReceiveHovered ? classes.transferReceiveAnimated : ""
-          }`}
-          leftIcon={<TbInbox size={18} />}
-          disabled={isUploading}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onReceive?.();
-          }}
-          onMouseEnter={() => setIsReceiveHovered(true)}
-          onMouseLeave={() => setIsReceiveHovered(false)}
-        >
-          {receiveLabel ?? "接受文件"}
-        </Button>
-      )}
       {variant == "default" && (
         <Center>
           <Button

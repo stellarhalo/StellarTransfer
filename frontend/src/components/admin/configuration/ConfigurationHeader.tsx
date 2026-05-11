@@ -27,7 +27,7 @@ const ConfigurationHeader = ({
       height={84}
       p={16}
       sx={{
-        background: "transparent",
+        background: "#ffffff",
         borderBottom: 0,
       }}
     >
@@ -36,10 +36,10 @@ const ConfigurationHeader = ({
           display: "flex",
           alignItems: "center",
           height: "100%",
-          borderRadius: 32,
-          background: "rgba(255, 255, 255, 0.96)",
-          border: "1px solid rgba(24, 25, 27, 0.08)",
-          boxShadow: "0 16px 44px rgba(24, 25, 27, 0.1)",
+          borderRadius: 0,
+          background: "#ffffff",
+          border: 0,
+          boxShadow: "none",
           padding: "0 14px 0 18px",
         }}
       >
@@ -63,7 +63,7 @@ const ConfigurationHeader = ({
                 sx={{
                   width: 34,
                   height: 34,
-                  borderRadius: 12,
+                  borderRadius: 18,
                   display: "grid",
                   placeItems: "center",
                   background: "#171717",
@@ -73,14 +73,14 @@ const ConfigurationHeader = ({
               >
                 S
               </Box>
-              <Text weight={900}>{config.get("general.appName")}</Text>
+              <Text weight={900}>管理后台</Text>
             </Group>
           </Link>
           <MediaQuery smallerThan="sm" styles={{ display: "none" }}>
             <Button
               variant="filled"
               component={Link}
-              href="/admin"
+              href="/admin/users"
               h={38}
               radius={20}
               sx={{

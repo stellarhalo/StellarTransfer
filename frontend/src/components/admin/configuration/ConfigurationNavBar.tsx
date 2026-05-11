@@ -40,14 +40,16 @@ const useStyles = createStyles(() => ({
   activeLink: {
     backgroundColor: "#ffd84d",
     color: "#171717",
-    borderRadius: 12,
+    borderRadius: 18,
     fontWeight: 800,
   },
   link: {
-    borderRadius: 12,
-    color: "#252525",
+    borderRadius: 18,
+    color: "#8a8a8a",
+    fontWeight: 800,
     "&:hover": {
-      background: "#fff5c6",
+      background: "#ffffff",
+      color: "#111111",
     },
   },
 }));
@@ -69,12 +71,12 @@ const ConfigurationNavBar = ({
       hidden={!isMobileNavBarOpened}
       width={{ sm: 200, lg: 300 }}
       sx={{
-        background: "rgba(255, 255, 255, 0.94)",
-        borderRight: "1px solid rgba(24, 25, 27, 0.08)",
+        background: "#f6f6f6",
+        borderRight: "1px solid #eeeeee",
       }}
     >
       <Navbar.Section>
-        <Text size="xs" color="dimmed" mb="sm">
+        <Text size="lg" weight={900} color="#111111" mb="xl">
           <FormattedMessage id="admin.config.title" />
         </Text>
         <Stack spacing="xs">

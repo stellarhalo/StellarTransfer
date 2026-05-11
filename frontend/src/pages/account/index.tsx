@@ -1,8 +1,9 @@
 import {
   Badge,
+  Box,
   Button,
   Center,
-  Container,
+  createStyles,
   Group,
   Paper,
   PasswordInput,
@@ -15,11 +16,12 @@ import {
 import { useForm, yupResolver } from "@mantine/form";
 import { useModals } from "@mantine/modals";
 import { useEffect, useState } from "react";
-import { TbAuth2Fa } from "react-icons/tb";
+import { TbAuth2Fa, TbCloud, TbHistory, TbInfoCircle } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
 import * as yup from "yup";
 import Meta from "../../components/Meta";
 import showEnableTotpModal from "../../components/account/showEnableTotpModal";
+import DriveWorkspace from "../../components/layout/DriveWorkspace";
 import useConfig from "../../hooks/config.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
 import useUser from "../../hooks/user.hook";
@@ -28,7 +30,32 @@ import userService from "../../services/user.service";
 import { getOAuthIcon, getOAuthUrl, unlinkOAuth } from "../../utils/oauth.util";
 import toast from "../../utils/toast.util";
 
+const useStyles = createStyles(() => ({
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+    gap: 22,
+    "@media (max-width: 900px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  panel: {
+    border: "1px solid #eeeeee",
+    borderRadius: 24,
+    boxShadow: "0 12px 34px rgba(0, 0, 0, 0.05)",
+    background: "#ffffff",
+  },
+  panelTitle: {
+    fontWeight: 900,
+    color: "#111111",
+  },
+  danger: {
+    borderRadius: 18,
+  },
+}));
+
 const Account = () => {
+  const { classes } = useStyles();
   const [oauth, setOAuth] = useState<string[]>([]);
   const [oauthStatus, setOAuthStatus] = useState<Record<
     string,
@@ -37,6 +64,7 @@ const Account = () => {
       providerUsername: string;
     }
   > | null>(null);
+  const [search, setSearch] = useState("");
 
   const { user, refreshUser } = useUser();
   const modals = useModals();
@@ -131,55 +159,98 @@ const Account = () => {
     refreshOAuthStatus();
   }, []);
 
+  const matchesSearch = (values: string[]) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return values.join(" ").toLowerCase().includes(query);
+  };
+
+  const showInfoCard = matchesSearch([
+    "账号",
+    "账户",
+    "信息",
+    "邮箱",
+    "用户名",
+  ]);
+  const showPasswordCard = matchesSearch(["密码", "修改密码", "password"]);
+  const showOAuthCard = matchesSearch(["oauth", "第三方登录", ...oauth]);
+  const showSecurityCard = matchesSearch(["安全", "totp", "二次验证"]);
+  const showDeleteCard = matchesSearch(["删除", "注销", "危险"]);
+
   return (
-    <>
+    <DriveWorkspace
+      section="我的闪包"
+      sectionHref="/account/shares"
+      title={<FormattedMessage id="account.title" />}
+      activePath="/account"
+      searchPlaceholder="在我的闪包内搜索"
+      searchValue={search}
+      onSearchChange={setSearch}
+      navItems={[
+        {
+          href: "/account/shares",
+          icon: <TbCloud size={22} />,
+          label: <FormattedMessage id="account.shares.title" />,
+        },
+        {
+          href: "/account/reverseShares",
+          icon: <TbHistory size={22} />,
+          label: <FormattedMessage id="account.reverseShares.title" />,
+        },
+        {
+          href: "/account",
+          icon: <TbInfoCircle size={22} />,
+          label: <FormattedMessage id="account.title" />,
+        },
+      ]}
+      action={null}
+    >
       <Meta title={t("account.title")} />
-      <Container size="sm">
-        <Title order={3} mb="xs">
-          <FormattedMessage id="account.title" />
-        </Title>
-        <Paper withBorder p="xl">
-          <Title order={5} mb="xs">
-            <FormattedMessage id="account.card.info.title" />
-            {user?.isLdap ? (
-              <Badge style={{ marginLeft: "1em" }}>LDAP</Badge>
-            ) : null}
-          </Title>
-          <form
-            onSubmit={accountForm.onSubmit((values) =>
-              userService
-                .updateCurrentUser({
-                  username: values.username,
-                  email: values.email,
-                })
-                .then(() => toast.success(t("account.notify.info.success")))
-                .catch(toast.axiosError),
-            )}
-          >
-            <Stack>
-              <TextInput
-                label={t("account.card.info.username")}
-                disabled={user?.isLdap}
-                {...accountForm.getInputProps("username")}
-              />
-              <TextInput
-                label={t("account.card.info.email")}
-                disabled={user?.isLdap}
-                {...accountForm.getInputProps("email")}
-              />
-              {!user?.isLdap && (
-                <Group position="right">
-                  <Button type="submit">
-                    <FormattedMessage id="common.button.save" />
-                  </Button>
-                </Group>
+      <Box className={classes.grid}>
+        {showInfoCard && (
+          <Paper className={classes.panel} p="xl">
+            <Title className={classes.panelTitle} order={4} mb="md">
+              <FormattedMessage id="account.card.info.title" />
+              {user?.isLdap ? (
+                <Badge style={{ marginLeft: "1em" }}>LDAP</Badge>
+              ) : null}
+            </Title>
+            <form
+              onSubmit={accountForm.onSubmit((values) =>
+                userService
+                  .updateCurrentUser({
+                    username: values.username,
+                    email: values.email,
+                  })
+                  .then(() => toast.success(t("account.notify.info.success")))
+                  .catch(toast.axiosError),
               )}
-            </Stack>
-          </form>
-        </Paper>
-        {user?.isLdap ? null : (
-          <Paper withBorder p="xl" mt="lg">
-            <Title order={5} mb="xs">
+            >
+              <Stack>
+                <TextInput
+                  label={t("account.card.info.username")}
+                  disabled={user?.isLdap}
+                  {...accountForm.getInputProps("username")}
+                />
+                <TextInput
+                  label={t("account.card.info.email")}
+                  disabled={user?.isLdap}
+                  {...accountForm.getInputProps("email")}
+                />
+                {!user?.isLdap && (
+                  <Group position="right">
+                    <Button type="submit">
+                      <FormattedMessage id="common.button.save" />
+                    </Button>
+                  </Group>
+                )}
+              </Stack>
+            </form>
+          </Paper>
+        )}
+        {!user?.isLdap && showPasswordCard && (
+          <Paper className={classes.panel} p="xl">
+            <Title className={classes.panelTitle} order={4} mb="md">
               <FormattedMessage id="account.card.password.title" />
             </Title>
             <form
@@ -218,9 +289,9 @@ const Account = () => {
             </form>
           </Paper>
         )}
-        {oauth.length > 0 && (
-          <Paper withBorder p="xl" mt="lg">
-            <Title order={5} mb="xs">
+        {oauth.length > 0 && showOAuthCard && (
+          <Paper className={classes.panel} p="xl">
+            <Title className={classes.panelTitle} order={4} mb="md">
               <FormattedMessage id="account.card.oauth.title" />
             </Title>
 
@@ -288,129 +359,134 @@ const Account = () => {
             </Tabs>
           </Paper>
         )}
-        <Paper withBorder p="xl" mt="lg">
-          <Title order={5} mb="xs">
-            <FormattedMessage id="account.card.security.title" />
-          </Title>
+        {showSecurityCard && (
+          <Paper className={classes.panel} p="xl">
+            <Title className={classes.panelTitle} order={4} mb="md">
+              <FormattedMessage id="account.card.security.title" />
+            </Title>
 
-          <Tabs defaultValue="totp">
-            <Tabs.List>
-              <Tabs.Tab value="totp" icon={<TbAuth2Fa size={14} />}>
-                TOTP
-              </Tabs.Tab>
-            </Tabs.List>
+            <Tabs defaultValue="totp">
+              <Tabs.List>
+                <Tabs.Tab value="totp" icon={<TbAuth2Fa size={14} />}>
+                  TOTP
+                </Tabs.Tab>
+              </Tabs.List>
 
-            <Tabs.Panel value="totp" pt="xs">
-              {user?.totpVerified ? (
-                <>
-                  <form
-                    onSubmit={disableTotpForm.onSubmit((values) => {
-                      authService
-                        .disableTOTP(values.code, values.password)
-                        .then(() => {
-                          toast.success(t("account.notify.totp.disable"));
-                          values.password = "";
-                          values.code = "";
-                          refreshUser();
-                        })
+              <Tabs.Panel value="totp" pt="xs">
+                {user?.totpVerified ? (
+                  <>
+                    <form
+                      onSubmit={disableTotpForm.onSubmit((values) => {
+                        authService
+                          .disableTOTP(values.code, values.password)
+                          .then(() => {
+                            toast.success(t("account.notify.totp.disable"));
+                            values.password = "";
+                            values.code = "";
+                            refreshUser();
+                          })
+                          .catch(toast.axiosError);
+                      })}
+                    >
+                      <Stack>
+                        <PasswordInput
+                          description={t(
+                            "account.card.security.totp.disable.description",
+                          )}
+                          label={t("account.card.password.title")}
+                          {...disableTotpForm.getInputProps("password")}
+                        />
+
+                        <TextInput
+                          variant="filled"
+                          label={t("account.modal.totp.code")}
+                          placeholder="******"
+                          {...disableTotpForm.getInputProps("code")}
+                        />
+
+                        <Group position="right">
+                          <Button color="red" type="submit">
+                            <FormattedMessage id="common.button.disable" />
+                          </Button>
+                        </Group>
+                      </Stack>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <form
+                      onSubmit={enableTotpForm.onSubmit((values) => {
+                        authService
+                          .enableTOTP(values.password)
+                          .then((result) => {
+                            showEnableTotpModal(modals, refreshUser, {
+                              qrCode: result.qrCode,
+                              secret: result.totpSecret,
+                              password: values.password,
+                            });
+                            values.password = "";
+                          })
+                          .catch(toast.axiosError);
+                      })}
+                    >
+                      <Stack>
+                        <PasswordInput
+                          label={t("account.card.password.title")}
+                          description={t(
+                            "account.card.security.totp.enable.description",
+                          )}
+                          {...enableTotpForm.getInputProps("password")}
+                        />
+                        <Group position="right">
+                          <Button type="submit">
+                            <FormattedMessage id="account.card.security.totp.button.start" />
+                          </Button>
+                        </Group>
+                      </Stack>
+                    </form>
+                  </>
+                )}
+              </Tabs.Panel>
+            </Tabs>
+          </Paper>
+        )}
+        {showDeleteCard && (
+          <Center>
+            <Stack>
+              <Button
+                className={classes.danger}
+                variant="light"
+                color="red"
+                onClick={() =>
+                  modals.openConfirmModal({
+                    title: t("account.modal.delete.title"),
+                    children: (
+                      <Text size="sm">
+                        <FormattedMessage id="account.modal.delete.description" />
+                      </Text>
+                    ),
+
+                    labels: {
+                      confirm: t("common.button.delete"),
+                      cancel: t("common.button.cancel"),
+                    },
+                    confirmProps: { color: "red" },
+                    onConfirm: async () => {
+                      await userService
+                        .removeCurrentUser()
+                        .then(() => window.location.reload())
                         .catch(toast.axiosError);
-                    })}
-                  >
-                    <Stack>
-                      <PasswordInput
-                        description={t(
-                          "account.card.security.totp.disable.description",
-                        )}
-                        label={t("account.card.password.title")}
-                        {...disableTotpForm.getInputProps("password")}
-                      />
-
-                      <TextInput
-                        variant="filled"
-                        label={t("account.modal.totp.code")}
-                        placeholder="******"
-                        {...disableTotpForm.getInputProps("code")}
-                      />
-
-                      <Group position="right">
-                        <Button color="red" type="submit">
-                          <FormattedMessage id="common.button.disable" />
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <form
-                    onSubmit={enableTotpForm.onSubmit((values) => {
-                      authService
-                        .enableTOTP(values.password)
-                        .then((result) => {
-                          showEnableTotpModal(modals, refreshUser, {
-                            qrCode: result.qrCode,
-                            secret: result.totpSecret,
-                            password: values.password,
-                          });
-                          values.password = "";
-                        })
-                        .catch(toast.axiosError);
-                    })}
-                  >
-                    <Stack>
-                      <PasswordInput
-                        label={t("account.card.password.title")}
-                        description={t(
-                          "account.card.security.totp.enable.description",
-                        )}
-                        {...enableTotpForm.getInputProps("password")}
-                      />
-                      <Group position="right">
-                        <Button type="submit">
-                          <FormattedMessage id="account.card.security.totp.button.start" />
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </form>
-                </>
-              )}
-            </Tabs.Panel>
-          </Tabs>
-        </Paper>
-        <Center mt={80} mb="lg">
-          <Stack>
-            <Button
-              variant="light"
-              color="red"
-              onClick={() =>
-                modals.openConfirmModal({
-                  title: t("account.modal.delete.title"),
-                  children: (
-                    <Text size="sm">
-                      <FormattedMessage id="account.modal.delete.description" />
-                    </Text>
-                  ),
-
-                  labels: {
-                    confirm: t("common.button.delete"),
-                    cancel: t("common.button.cancel"),
-                  },
-                  confirmProps: { color: "red" },
-                  onConfirm: async () => {
-                    await userService
-                      .removeCurrentUser()
-                      .then(() => window.location.reload())
-                      .catch(toast.axiosError);
-                  },
-                })
-              }
-            >
-              <FormattedMessage id="account.button.delete" />
-            </Button>
-          </Stack>
-        </Center>
-      </Container>
-    </>
+                    },
+                  })
+                }
+              >
+                <FormattedMessage id="account.button.delete" />
+              </Button>
+            </Stack>
+          </Center>
+        )}
+      </Box>
+    </DriveWorkspace>
   );
 };
 
