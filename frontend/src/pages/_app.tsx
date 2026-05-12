@@ -44,10 +44,12 @@ const excludeDefaultLayoutRoutes = [
   "/account/shares",
   "/account/reverseShares",
   "/upload",
+  "/upload/[reverseShareToken]",
   "/help",
   "/auth/signIn",
   "/auth/signUp",
   "/share/[shareId]",
+  "/share/[shareId]/edit",
 ];
 
 function App({ Component, pageProps }: AppProps) {

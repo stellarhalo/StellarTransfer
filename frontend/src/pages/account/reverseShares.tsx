@@ -13,9 +13,9 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useClipboard } from "@mantine/hooks";
 import { useModals } from "@mantine/modals";
 import moment from "moment";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   TbCloud,
@@ -30,8 +30,6 @@ import { FormattedMessage } from "react-intl";
 import Meta from "../../components/Meta";
 import showEditReverseShareModal from "../../components/account/showEditReverseShareModal";
 import showReverseShareInfoModal from "../../components/account/showReverseShareInfoModal";
-import showReverseShareLinkModal from "../../components/account/showReverseShareLinkModal";
-import showShareLinkModal from "../../components/account/showShareLinkModal";
 import CenterLoader from "../../components/core/CenterLoader";
 import DriveWorkspace from "../../components/layout/DriveWorkspace";
 import showCreateReverseShareModal from "../../components/share/modals/showCreateReverseShareModal";
@@ -40,7 +38,6 @@ import useTranslate from "../../hooks/useTranslate.hook";
 import shareService from "../../services/share.service";
 import { MyReverseShare } from "../../types/share.type";
 import { byteToHumanSizeString } from "../../utils/fileSize.util";
-import toast from "../../utils/toast.util";
 
 const useStyles = createStyles(() => ({
   tablePanel: {
@@ -84,7 +81,6 @@ const useStyles = createStyles(() => ({
 const MyShares = () => {
   const { classes } = useStyles();
   const modals = useModals();
-  const clipboard = useClipboard();
   const t = useTranslate();
 
   const config = useConfig();
@@ -332,23 +328,11 @@ const MyShares = () => {
                           <TbInfoCircle />
                         </ActionIcon>
                         <ActionIcon
+                          component={Link}
+                          href={`/upload/${reverseShare.token}`}
                           className={classes.actionIcon}
                           size={34}
-                          onClick={() => {
-                            if (window.isSecureContext) {
-                              clipboard.copy(
-                                `${window.location.origin}/upload/${
-                                  reverseShare.token
-                                }`,
-                              );
-                              toast.success(t("common.notify.copied-link"));
-                            } else {
-                              showReverseShareLinkModal(
-                                modals,
-                                reverseShare.token,
-                              );
-                            }
-                          }}
+                          title="打开闪包链接"
                         >
                           <TbLink />
                         </ActionIcon>

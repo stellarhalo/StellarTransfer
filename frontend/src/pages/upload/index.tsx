@@ -22,6 +22,7 @@ import {
   ScrollArea,
   Select,
   Stack,
+  Table,
   Text,
   Textarea,
   TextInput,
@@ -39,6 +40,7 @@ import pLimit from "p-limit";
 import { useEffect, useRef, useState } from "react";
 import {
   TbAlertCircle,
+  TbArrowLeft,
   TbBell,
   TbCheck,
   TbCircle,
@@ -48,7 +50,9 @@ import {
   TbHistory,
   TbLanguage,
   TbLogin,
+  TbPlus,
   TbSettings,
+  TbTrash,
   TbUser,
   TbX,
 } from "react-icons/tb";
@@ -59,6 +63,7 @@ import Dropzone from "../../components/upload/Dropzone";
 import FileList from "../../components/upload/FileList";
 import showCompletedUploadModal from "../../components/upload/modals/showCompletedUploadModal";
 import showCreateUploadModal from "../../components/upload/modals/showCreateUploadModal";
+import UploadProgressIndicator from "../../components/upload/UploadProgressIndicator";
 import useConfig from "../../hooks/config.hook";
 import useConfirmLeave from "../../hooks/confirm-leave.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
@@ -412,6 +417,213 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
+  reversePage: {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(135deg, #f7f7f7 0%, #ffffff 52%, #f0f0f0 100%)",
+    padding: "80px 20px 56px",
+
+    [theme.fn.smallerThan("sm")]: {
+      padding: "28px 16px",
+    },
+  },
+
+  reverseContainer: {
+    width: "min(800px, 100%)",
+    margin: "0 auto",
+  },
+
+  reverseToolbar: {
+    marginBottom: 20,
+  },
+
+  reverseSoftButton: {
+    height: 48,
+    padding: "0 22px",
+    borderRadius: 999,
+    background: "#f6f6f6",
+    color: "#111111",
+    fontWeight: 900,
+    fontSize: 17,
+
+    "&:hover": {
+      background: "#eeeeee",
+    },
+  },
+
+  reverseMeta: {
+    color: "#888888",
+    fontWeight: 800,
+  },
+
+  reverseCard: {
+    overflow: "hidden",
+    border: "1px solid #eeeeee",
+    borderRadius: 24,
+    background: "#ffffff",
+    boxShadow: "0 12px 34px rgba(0, 0, 0, 0.06)",
+  },
+
+  reverseHeader: {
+    padding: "30px 36px",
+    background: "linear-gradient(135deg, #ffd84d 0%, #ffe066 100%)",
+    borderBottom: "1px solid #f0e5c8",
+
+    [theme.fn.smallerThan("sm")]: {
+      padding: "24px 20px",
+    },
+  },
+
+  reverseBody: {
+    padding: "50px 36px 36px",
+
+    [theme.fn.smallerThan("sm")]: {
+      padding: "24px 18px 28px",
+    },
+  },
+
+  reverseAction: {
+    height: 52,
+    padding: "0 28px",
+    borderRadius: 999,
+    background: "#ffd84d",
+    color: "#111111",
+    fontWeight: 900,
+    boxShadow: "0 8px 20px rgba(255, 216, 77, 0.35)",
+
+    "&:hover": {
+      background: "#ffdf68",
+      transform: "translateY(-1px)",
+    },
+  },
+
+  reverseTransferHeader: {
+    marginBottom: 40,
+  },
+
+  reverseTransferTitle: {
+    fontSize: 28,
+    lineHeight: 1,
+    fontWeight: 900,
+    letterSpacing: 0,
+
+    [theme.fn.smallerThan("sm")]: {
+      fontSize: 34,
+    },
+  },
+
+  reverseAddButton: {
+    width: 60,
+    height: 60,
+    borderRadius: "50%",
+    background: "#ffdc5a",
+    color: "#111111",
+    boxShadow: "0 12px 26px rgba(255, 216, 77, 0.35)",
+    transition: "transform 160ms ease, background 160ms ease",
+
+    "&:hover": {
+      background: "#ffe27a",
+      transform: "translateY(-1px) scale(1.02)",
+    },
+
+    [theme.fn.smallerThan("sm")]: {
+      width: 64,
+      height: 64,
+    },
+  },
+
+  reverseTotalText: {
+    color: "#8f969f",
+    fontSize: 18,
+    fontWeight: 900,
+
+    [theme.fn.smallerThan("sm")]: {
+      fontSize: 20,
+    },
+  },
+
+  reverseListCard: {
+    overflow: "hidden",
+    borderRadius: 20,
+    border: "1px solid #eeeeee",
+    background: "#ffffff",
+    boxShadow: "0 12px 34px rgba(0, 0, 0, 0.06)",
+  },
+
+  reverseTable: {
+    tableLayout: "fixed",
+
+    "thead tr": {
+      height: 76,
+      background: "#fff9df",
+    },
+    "thead tr th": {
+      borderBottom: "1px solid #eee8d0",
+      color: "#111111",
+      fontSize: 16,
+      fontWeight: 900,
+      padding: "0 28px",
+    },
+    "tbody tr": {
+      height: 96,
+      transition: "background 140ms ease",
+
+      "&:hover": {
+        background: "#fafafa",
+      },
+    },
+    "tbody tr td": {
+      borderBottom: "1px solid #f0f0f0",
+      padding: "0 20px",
+      verticalAlign: "middle",
+    },
+    "tbody tr:last-of-type td": {
+      borderBottom: 0,
+    },
+  },
+
+  reverseFileName: {
+    color: "#000000",
+    fontSize: 16,
+    fontWeight: 900,
+    lineHeight: 1.2,
+
+    [theme.fn.smallerThan("sm")]: {
+      fontSize: 18,
+    },
+  },
+
+  reverseFileSize: {
+    color: "#8f969f",
+    fontSize: 14,
+    fontWeight: 900,
+    textAlign: "center",
+
+    [theme.fn.smallerThan("sm")]: {
+      fontSize: 18,
+    },
+  },
+
+  reverseRemoveButton: {
+    width: 52,
+    height: 52,
+    borderRadius: "50%",
+    background: "#fff3f3",
+    color: "#ff5555",
+
+    "&:hover": {
+      background: "#ffe3e3",
+    },
+  },
+
+  reverseEmptyCard: {
+    padding: 36,
+    borderRadius: 20,
+    border: "1px solid #eeeeee",
+    background: "#ffffff",
+    boxShadow: "0 12px 34px rgba(0, 0, 0, 0.06)",
+  },
+
   completedReturnButton: {
     position: "relative",
     width: 118,
@@ -690,7 +902,9 @@ const Upload = ({
   const [completedShare, setCompletedShare] = useState<CompletedShare>();
   const [language, setLanguage] = useState<string>("en-US");
   const [mounted, setMounted] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationHistoryItem[]>(
+    [],
+  );
   const homeText = mounted
     ? language.startsWith("zh")
       ? HOME_COPY.zh
@@ -740,10 +954,11 @@ const Upload = ({
   });
 
   const chunkSize = useRef(parseInt(config.get("share.chunkSize")));
+  const reverseFileInputRef = useRef<HTMLInputElement>(null);
 
   maxShareSize ??= parseInt(config.get("share.maxSize"));
   if (!isReverseShare) maxShareSize = 0;
-  const autoOpenCreateUploadModal = config.get("share.autoOpenShareModal");
+  const autoOpenCreateUploadModal = false;
 
   const uploadFiles = async (share: CreateShare, files: FileUpload[]) => {
     setisUploading(true);
@@ -854,6 +1069,49 @@ const Upload = ({
     }
   };
 
+  const addReverseFiles = (selectedFiles: FileUpload[]) => {
+    if (selectedFiles.length === 0) return;
+
+    const currentSize = files.reduce((total, file) => total + file.size, 0);
+    const selectedSize = selectedFiles.reduce(
+      (total, file) => total + file.size,
+      0,
+    );
+
+    if (maxShareSize > 0 && currentSize + selectedSize > maxShareSize) {
+      toast.error(
+        t("upload.dropzone.notify.file-too-big", {
+          maxSize: byteToHumanSizeString(maxShareSize),
+        }),
+      );
+      return;
+    }
+
+    setFiles([
+      ...files,
+      ...selectedFiles.map((file) => {
+        file.uploadingProgress = 0;
+        return file;
+      }),
+    ]);
+  };
+
+  const removeReverseFile = (index: number) => {
+    setFiles(files.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const reverseTotalSize = files.reduce((total, file) => total + file.size, 0);
+  const reverseUploadProgress =
+    files.length > 0
+      ? Math.round(
+          files.reduce(
+            (total, file) =>
+              total + Math.max(0, Math.min(file.uploadingProgress, 100)),
+            0,
+          ) / files.length,
+        )
+      : 0;
+
   const openReceivedShare = (code?: string) => {
     const normalizedCode = code?.trim();
     if (normalizedCode) void router.push(`/share/${normalizedCode}`);
@@ -902,17 +1160,6 @@ const Upload = ({
     }
   }, [files]);
 
-  const shareButton = (
-    <Button
-      loading={isUploading}
-      disabled={files.length <= 0}
-      onClick={() => showCreateUploadModalCallback(files)}
-      className={!isReverseShare ? classes.shareAction : undefined}
-    >
-      <FormattedMessage id="common.button.share" />
-    </Button>
-  );
-
   if (!isReverseShare) {
     return (
       <Box className={classes.page}>
@@ -947,7 +1194,12 @@ const Upload = ({
             <TbCloud size={17} />
             {homeText.cloud}
           </Anchor>
-          <ActionIcon className={classes.navIcon} radius="xl" size={34} onClick={openHelp}>
+          <ActionIcon
+            className={classes.navIcon}
+            radius="xl"
+            size={34}
+            onClick={openHelp}
+          >
             <TbHelpCircle size={19} />
           </ActionIcon>
           <Popover width={340} position="bottom-end" shadow="xl" withinPortal>
@@ -960,11 +1212,7 @@ const Upload = ({
               <Group position="apart" mb="sm">
                 <Text weight={900}>通知消息</Text>
                 {notifications.length > 0 && (
-                  <Button
-                    compact
-                    variant="subtle"
-                    onClick={clearNotifications}
-                  >
+                  <Button compact variant="subtle" onClick={clearNotifications}>
                     清空
                   </Button>
                 )}
@@ -978,11 +1226,7 @@ const Upload = ({
                 <ScrollArea h={260} type="auto">
                   <Stack spacing={0}>
                     {notifications.map((notification) => (
-                      <Group
-                        key={notification.id}
-                        align="flex-start"
-                        noWrap
-                      >
+                      <Group key={notification.id} align="flex-start" noWrap>
                         {notification.type === "success" ? (
                           <TbCheck color="#2f9e44" size={18} />
                         ) : (
@@ -1001,9 +1245,7 @@ const Upload = ({
                             {notification.message}
                           </Text>
                           <Text size="xs" color="dimmed" mt={4}>
-                            {new Date(
-                              notification.createdAt,
-                            ).toLocaleString()}
+                            {new Date(notification.createdAt).toLocaleString()}
                           </Text>
                         </Box>
                       </Group>
@@ -1102,25 +1344,170 @@ const Upload = ({
   }
 
   return (
-    <>
+    <Box className={classes.reversePage}>
       <Meta title={t("upload.title")} />
-      <Group position="right" mb={20}>
-        {shareButton}
-      </Group>
-      <Dropzone
-        title={
-          !autoOpenCreateUploadModal && files.length > 0
-            ? t("share.edit.append-upload")
-            : undefined
-        }
-        maxShareSize={maxShareSize}
-        onFilesChanged={handleDropzoneFilesChanged}
-        isUploading={isUploading}
-      />
-      {files.length > 0 && (
-        <FileList<FileUpload> files={files} setFiles={setFiles} />
-      )}
-    </>
+      <Box className={classes.reverseContainer}>
+        <Group
+          className={classes.reverseToolbar}
+          position="apart"
+          align="center"
+        >
+          <Group spacing={10}>
+            <Button
+              component={Link}
+              href="/account/reverseShares"
+              leftIcon={<TbArrowLeft size={18} />}
+              className={classes.reverseSoftButton}
+            >
+              我的闪包
+            </Button>
+            <Text className={classes.reverseMeta}>闪包上传</Text>
+          </Group>
+        </Group>
+        <Paper className={classes.reverseCard}>
+          <Box className={classes.reverseHeader}>
+            <Group position="apart" align="flex-start" noWrap>
+              <Box>
+                <Title order={2} weight={900}>
+                  闪包上传
+                </Title>
+                <Text color="dark" weight={700} mt={8}>
+                  添加文件并开始上传，文件会发送到该闪包请求。
+                </Text>
+              </Box>
+            </Group>
+          </Box>
+          <Stack className={classes.reverseBody} spacing={22}>
+            <Group
+              className={classes.reverseTransferHeader}
+              position="apart"
+              noWrap
+            >
+              <Group spacing={28} noWrap>
+                <Title order={1} className={classes.reverseTransferTitle}>
+                  文件传输
+                </Title>
+                <input
+                  ref={reverseFileInputRef}
+                  type="file"
+                  multiple
+                  hidden
+                  onChange={(event) => {
+                    addReverseFiles(
+                      Array.from(
+                        event.currentTarget.files || [],
+                      ) as FileUpload[],
+                    );
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <ActionIcon
+                  className={classes.reverseAddButton}
+                  disabled={isUploading}
+                  onClick={() => reverseFileInputRef.current?.click()}
+                >
+                  <TbPlus size={26} strokeWidth={2.6} />
+                </ActionIcon>
+              </Group>
+              <Text className={classes.reverseTotalText}>
+                共 {byteToHumanSizeString(reverseTotalSize)}
+              </Text>
+            </Group>
+            {files.length > 0 && (
+              <Paper className={classes.reverseListCard}>
+                <Table className={classes.reverseTable}>
+                  <thead>
+                    <tr>
+                      <th>文件名</th>
+                      <th style={{ textAlign: "center", width: 150 }}>
+                        文件大小
+                      </th>
+                      <th style={{ width: 88 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {files.map((file, index) => {
+                      const uploading = file.uploadingProgress !== 0;
+                      const removable =
+                        !isUploading && file.uploadingProgress === 0;
+
+                      return (
+                        <tr key={`${file.name}-${index}`}>
+                          <td>
+                            <Text
+                              className={classes.reverseFileName}
+                              lineClamp={2}
+                            >
+                              {file.name}
+                            </Text>
+                          </td>
+                          <td>
+                            <Text className={classes.reverseFileSize}>
+                              {byteToHumanSizeString(Number(file.size))}
+                            </Text>
+                          </td>
+                          <td>
+                            <Group position="center">
+                              {removable && (
+                                <ActionIcon
+                                  className={classes.reverseRemoveButton}
+                                  onClick={() => removeReverseFile(index)}
+                                >
+                                  <TbTrash size={24} />
+                                </ActionIcon>
+                              )}
+                              {uploading && (
+                                <UploadProgressIndicator
+                                  progress={file.uploadingProgress}
+                                />
+                              )}
+                            </Group>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </Paper>
+            )}
+            {files.length === 0 && (
+              <Paper className={classes.reverseEmptyCard}>
+                <Text color="dimmed" weight={800} align="center">
+                  点击上方 + 添加文件
+                </Text>
+              </Paper>
+            )}
+            {(isUploading || reverseUploadProgress > 0) && (
+              <Stack spacing={6}>
+                <Group position="apart">
+                  <Text size="sm" weight={800}>
+                    上传进度
+                  </Text>
+                  <Text size="sm" weight={900}>
+                    {reverseUploadProgress}%
+                  </Text>
+                </Group>
+                <Progress
+                  value={reverseUploadProgress}
+                  color="yellow"
+                  radius="xl"
+                  size="lg"
+                />
+              </Stack>
+            )}
+            <Button
+              loading={isUploading}
+              disabled={files.length <= 0}
+              onClick={() => showCreateUploadModalCallback(files)}
+              className={classes.reverseAction}
+              ml="auto"
+            >
+              开始上传
+            </Button>
+          </Stack>
+        </Paper>
+      </Box>
+    </Box>
   );
 };
 

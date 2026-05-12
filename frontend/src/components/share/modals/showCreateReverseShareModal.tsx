@@ -127,6 +127,11 @@ const Body = ({
     <Group>
       <form onSubmit={onSubmit}>
         <Stack align="stretch">
+          <TextInput
+            label={t("account.reverseShares.modal.name.label")}
+            placeholder={t("account.reverseShares.modal.name.placeholder")}
+            {...form.getInputProps("name")}
+          />
           <div>
             <Grid align={form.errors.expiration_num ? "center" : "flex-end"}>
               <Col xs={6}>
@@ -207,11 +212,6 @@ const Body = ({
               )}
             </Text>
           </div>
-          <TextInput
-            label={t("account.reverseShares.modal.name.label")}
-            placeholder={t("account.reverseShares.modal.name.placeholder")}
-            {...form.getInputProps("name")}
-          />
           <FileSizeInput
             label={t("account.reverseShares.modal.max-size.label")}
             value={form.values.maxShareSize}

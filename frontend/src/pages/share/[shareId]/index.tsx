@@ -19,6 +19,7 @@ import {
   TbHome,
   TbLink,
 } from "react-icons/tb";
+import QRCode from "qrcode";
 import showEnterPasswordModal from "../../../components/share/showEnterPasswordModal";
 import useTranslate from "../../../hooks/useTranslate.hook";
 import shareService from "../../../services/share.service";
@@ -36,7 +37,8 @@ export function getServerSideProps(context: GetServerSidePropsContext) {
 const useStyles = createStyles(() => ({
   root: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #f7f7f7 0%, #ffffff 50%, #f0f0f0 100%)",
+    background:
+      "linear-gradient(135deg, #f7f7f7 0%, #ffffff 50%, #f0f0f0 100%)",
     paddingTop: 80,
   },
   container: {
@@ -78,14 +80,17 @@ const useStyles = createStyles(() => ({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 18,
-    color: "#555555",
+    color: "#000000",
+    "& svg": {
+      strokeWidth: 2.8,
+    },
   },
   fileName: {
     flex: 1,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    fontWeight: 800,
+    fontWeight: 900,
     color: "#222222",
     fontSize: 16,
   },
@@ -97,9 +102,12 @@ const useStyles = createStyles(() => ({
   },
   downloadIcon: {
     marginLeft: 16,
-    color: "#333333",
+    color: "#000000",
     cursor: "pointer",
     transition: "color 140ms ease",
+    "& svg": {
+      strokeWidth: 2.8,
+    },
     "&:hover": {
       color: "#ffd84d",
     },
@@ -127,7 +135,7 @@ const useStyles = createStyles(() => ({
     height: 58,
     borderRadius: 29,
     background: "linear-gradient(135deg, #ffd84d 0%, #ffdf68 100%)",
-    color: "#5a4b16",
+    color: "#000000",
     fontWeight: 900,
     fontSize: 17,
     border: "none",
@@ -139,6 +147,9 @@ const useStyles = createStyles(() => ({
       transform: "translateY(-2px)",
       boxShadow: "0 12px 28px rgba(255, 216, 77, 0.45)",
     },
+    "& svg": {
+      strokeWidth: 2.9,
+    },
   },
   transferText: {
     marginTop: 16,
@@ -149,9 +160,11 @@ const useStyles = createStyles(() => ({
     display: "inline-block",
     paddingBottom: 2,
     cursor: "pointer",
-    transition: "border-color 140ms ease",
+    transition: "all 140ms ease",
     "&:hover": {
       borderColor: "#111111",
+      color: "#111111",
+      fontWeight: 900,
     },
   },
   divider: {
@@ -159,15 +172,6 @@ const useStyles = createStyles(() => ({
     height: 1,
     background: "#eeeeee",
     margin: "24px auto",
-  },
-  shareHint: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    color: "#aaaaaa",
-    fontWeight: 700,
-    fontSize: 14,
   },
   errorCard: {
     border: "1px solid #eeeeee",
@@ -238,15 +242,57 @@ const useStyles = createStyles(() => ({
     fontWeight: 700,
     fontSize: 15,
   },
+  shareHint: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    color: "#aaaaaa",
+    fontWeight: 700,
+    fontSize: 14,
+    cursor: "pointer",
+    transition: "all 140ms ease",
+    "&:hover": {
+      color: "#111111",
+      fontWeight: 900,
+    },
+  },
+  shareHintIcon: {
+    transition: "all 140ms ease",
+    "&:hover": {
+      transform: "scale(1.15)",
+    },
+  },
+  qrSection: {
+    overflow: "hidden",
+    transition: "all 300ms ease",
+    maxHeight: 0,
+    opacity: 0,
+  },
+  qrSectionOpen: {
+    maxHeight: 400,
+    opacity: 1,
+  },
+  qrContainer: {
+    padding: "24px 0 12px",
+    textAlign: "center" as const,
+  },
 }));
 
-type ErrorType = "not-found" | "removed" | "access-denied" | "visitor-limit-exceeded" | null;
+type ErrorType =
+  | "not-found"
+  | "removed"
+  | "access-denied"
+  | "visitor-limit-exceeded"
+  | null;
 
 const Share = ({ shareId }: { shareId: string }) => {
   const [share, setShare] = useState<ShareType>();
   const [isMounted, setIsMounted] = useState(false);
   const [errorType, setErrorType] = useState<ErrorType>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [qrSectionOpen, setQrSectionOpen] = useState(false);
   const t = useTranslate();
   const { locale } = useIntl();
   const modals = useModals();
@@ -284,7 +330,9 @@ const Share = ({ shareId }: { shareId: string }) => {
         if (e.response.status == 404) {
           if (error == "share_removed") {
             setErrorType("removed");
-            setErrorMessage(e.response.data.message || t("share.error.removed.title"));
+            setErrorMessage(
+              e.response.data.message || t("share.error.removed.title"),
+            );
           } else {
             setErrorType("not-found");
             setErrorMessage(t("share.error.not-found.description"));
@@ -308,15 +356,19 @@ const Share = ({ shareId }: { shareId: string }) => {
     getFiles();
   }, []);
 
-  const totalSize = share?.files?.reduce(
-    (total: number, file: { size: string }) => total + parseInt(file.size),
-    0,
-  ) || 0;
+  const totalSize =
+    share?.files?.reduce(
+      (total: number, file: { size: string }) => total + parseInt(file.size),
+      0,
+    ) || 0;
 
-  const expireHours = share?.expires
+  const expireHours = share?.expiration
     ? Math.max(
         0,
-        Math.floor((new Date(share.expires).getTime() - Date.now()) / (1000 * 60 * 60)),
+        Math.floor(
+          (new Date(share.expiration).getTime() - Date.now()) /
+            (1000 * 60 * 60),
+        ),
       )
     : 168;
 
@@ -332,10 +384,20 @@ const Share = ({ shareId }: { shareId: string }) => {
     shareService.downloadFile(shareId, fileId);
   };
 
+  const handleShareViaPhone = () => {
+    if (!qrSectionOpen) {
+      const shareUrl = `${window.location.origin}/share/${shareId}`;
+      QRCode.toDataURL(shareUrl, { width: 280, margin: 2 }).then(setQrCodeUrl);
+    }
+    setQrSectionOpen(!qrSectionOpen);
+  };
+
   const brandName = isZh ? "星闪包" : "StellarTransfer";
   const expireText = isZh ? "小时后过期" : " hours until expiry";
   const downloadText = isZh ? "下载文件" : "Download";
-  const transferText = isZh ? "随时转存，即时下载" : "Transfer anytime, download anytime";
+  const transferText = isZh
+    ? "随时转存，即时下载"
+    : "Transfer anytime, download anytime";
 
   const getErrorTitle = () => {
     switch (errorType) {
@@ -355,7 +417,9 @@ const Share = ({ shareId }: { shareId: string }) => {
     return (
       <div className={classes.root}>
         <Head>
-          <title>{getErrorTitle()} - {brandName}</title>
+          <title>
+            {getErrorTitle()} - {brandName}
+          </title>
         </Head>
         <Box className={classes.container}>
           <Paper className={classes.errorCard}>
@@ -365,9 +429,7 @@ const Share = ({ shareId }: { shareId: string }) => {
             <Title className={classes.errorTitle} order={3}>
               {getErrorTitle()}
             </Title>
-            <Text className={classes.errorDescription}>
-              {errorMessage}
-            </Text>
+            <Text className={classes.errorDescription}>{errorMessage}</Text>
             <Box className={classes.errorActions}>
               <Button
                 component={Link}
@@ -387,7 +449,9 @@ const Share = ({ shareId }: { shareId: string }) => {
   return (
     <div className={classes.root}>
       <Head>
-        <title>{t("share.title", { shareId: share?.name || shareId })} - {brandName}</title>
+        <title>
+          {t("share.title", { shareId: share?.name || shareId })} - {brandName}
+        </title>
         <meta name="description" content={t("share.description")} />
       </Head>
 
@@ -401,25 +465,27 @@ const Share = ({ shareId }: { shareId: string }) => {
             </Box>
           ) : (
             <>
-              {share?.files?.map((file: { id: string; name: string; size: string }) => (
-                <Box key={file.id} className={classes.fileRow}>
-                  <Box className={classes.fileIcon}>
-                    <TbFile size={24} />
+              {share?.files?.map(
+                (file: { id: string; name: string; size: string }) => (
+                  <Box key={file.id} className={classes.fileRow}>
+                    <Box className={classes.fileIcon}>
+                      <TbFile size={24} />
+                    </Box>
+                    <Text className={classes.fileName} title={file.name}>
+                      {file.name}
+                    </Text>
+                    <Text className={classes.fileSize}>
+                      {byteToHumanSizeString(parseInt(file.size))}
+                    </Text>
+                    <Box
+                      className={classes.downloadIcon}
+                      onClick={() => handleDownloadFile(file.id)}
+                    >
+                      <TbDownload size={24} />
+                    </Box>
                   </Box>
-                  <Text className={classes.fileName} title={file.name}>
-                    {file.name}
-                  </Text>
-                  <Text className={classes.fileSize}>
-                    {byteToHumanSizeString(parseInt(file.size))}
-                  </Text>
-                  <Box
-                    className={classes.downloadIcon}
-                    onClick={() => handleDownloadFile(file.id)}
-                  >
-                    <TbDownload size={24} />
-                  </Box>
-                </Box>
-              ))}
+                ),
+              )}
 
               <Box className={classes.infoSection}>
                 <Group position="center" spacing="xl">
@@ -435,13 +501,17 @@ const Share = ({ shareId }: { shareId: string }) => {
                   </Box>
                   <Box>
                     <Text className={classes.statText}>
-                      {expireHours}{expireText}
+                      {expireHours}
+                      {expireText}
                     </Text>
                   </Box>
                 </Group>
 
                 <Box mt={28}>
-                  <button className={classes.downloadBtn} onClick={handleDownloadAll}>
+                  <button
+                    className={classes.downloadBtn}
+                    onClick={handleDownloadAll}
+                  >
                     <TbDownload size={22} />
                     {downloadText}
                   </button>
@@ -453,9 +523,26 @@ const Share = ({ shareId }: { shareId: string }) => {
 
                 <Box className={classes.divider} />
 
-                <Box className={classes.shareHint}>
-                  <TbLink size={20} />
+                <Box className={classes.shareHint} onClick={handleShareViaPhone}>
+                  <TbLink size={20} className={classes.shareHintIcon} />
                   <Text>{isZh ? "通过手机分享" : "Share via phone"}</Text>
+                </Box>
+
+                <Box
+                  className={`${classes.qrSection} ${
+                    qrSectionOpen ? classes.qrSectionOpen : ""
+                  }`}
+                >
+                  <Box className={classes.qrContainer}>
+                    {qrCodeUrl && (
+                      <img
+                        src={qrCodeUrl}
+                        alt="QR Code"
+                        width={280}
+                        height={280}
+                      />
+                    )}
+                  </Box>
                 </Box>
               </Box>
             </>
