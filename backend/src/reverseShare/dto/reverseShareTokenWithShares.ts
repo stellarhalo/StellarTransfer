@@ -16,6 +16,9 @@ export class ReverseShareTokenWithShares extends OmitType(ReverseShareDTO, [
     "recipients" | "files" | "from" | "fromList" | "hasPassword" | "size"
   >[];
 
+  @Expose()
+  currentSize: number;
+
   fromList(partial: Partial<ReverseShareTokenWithShares>[]) {
     return partial.map((part) =>
       plainToClass(ReverseShareTokenWithShares, part, {

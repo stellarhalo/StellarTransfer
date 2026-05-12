@@ -1,4 +1,4 @@
-import { IsBoolean, IsString } from "class-validator";
+import { IsBoolean, IsString, IsOptional } from "class-validator";
 
 export class CreateReverseShareDTO {
   @IsBoolean()
@@ -15,4 +15,8 @@ export class CreateReverseShareDTO {
 
   @IsBoolean()
   publicAccess: boolean;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
 }

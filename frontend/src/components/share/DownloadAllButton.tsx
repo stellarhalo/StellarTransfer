@@ -41,13 +41,15 @@ const DownloadAllButton = ({ shareId }: { shareId: string }) => {
     <Button
       variant="filled"
       h={48}
-      radius={8}
+      radius={34}
       sx={{
         minWidth: 148,
-        background: "#171717",
+        background: "#ffd84d",
+        color: "#5a4b16",
         fontWeight: 900,
+        fontSize: 16,
         "&:hover": {
-          background: "#2b2b2b",
+          background: "#ffe066",
         },
       }}
       loading={isLoading}

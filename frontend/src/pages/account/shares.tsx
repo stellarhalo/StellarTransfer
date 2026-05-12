@@ -25,7 +25,6 @@ import {
   TbInfoCircle,
   TbLink,
   TbLock,
-  TbPlus,
   TbTrash,
 } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
@@ -62,9 +61,10 @@ const useStyles = createStyles(() => ({
     },
     "tbody tr td": {
       borderBottom: "1px solid #f0f0f0",
-      padding: "18px 18px",
+      padding: "18px",
       color: "#222222",
       fontWeight: 700,
+      verticalAlign: "middle",
     },
   },
   fileName: {
@@ -94,6 +94,7 @@ const MyShares = () => {
 
   const [shares, setShares] = useState<MyShare[]>();
   const [search, setSearch] = useState("");
+  const [selectedShareIds, setSelectedShareIds] = useState<string[]>([]);
 
   useEffect(() => {
     shareService.getMyShares().then((shares) => setShares(shares));
@@ -111,6 +112,40 @@ const MyShares = () => {
       .includes(query);
   });
 
+  const allSelected = selectedShareIds.length > 0 && selectedShareIds.length === filteredShares.length;
+
+  const handleSelectAllChange = (checked: boolean) => {
+    if (checked) {
+      setSelectedShareIds(filteredShares.map((share) => share.id));
+    } else {
+      setSelectedShareIds([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    modals.openConfirmModal({
+      title: "确认删除",
+      children: (
+        <Text size="sm">
+          确定要删除选中的 {selectedShareIds.length} 个共享吗？此操作不可恢复。
+        </Text>
+      ),
+      confirmProps: {
+        color: "red",
+      },
+      labels: {
+        confirm: t("common.button.delete"),
+        cancel: t("common.button.cancel"),
+      },
+      onConfirm: () => {
+        Promise.all(selectedShareIds.map((id) => shareService.remove(id))).then(() => {
+          setShares(shares.filter((share) => !selectedShareIds.includes(share.id)));
+          setSelectedShareIds([]);
+        });
+      },
+    });
+  };
+
   return (
     <DriveWorkspace
       section="我的闪包"
@@ -120,16 +155,17 @@ const MyShares = () => {
       searchPlaceholder="在我的闪包内搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="账户信息"
       navItems={[
         {
           href: "/account/shares",
-          icon: <TbCloud size={22} />,
-          label: <FormattedMessage id="account.shares.title" />,
+          icon: <TbHistory size={22} />,
+          label: "我的共享",
         },
         {
           href: "/account/reverseShares",
-          icon: <TbHistory size={22} />,
-          label: <FormattedMessage id="account.reverseShares.title" />,
+          icon: <TbCloud size={22} />,
+          label: "我的闪包",
         },
         {
           href: "/account",
@@ -137,24 +173,7 @@ const MyShares = () => {
           label: <FormattedMessage id="account.title" />,
         },
       ]}
-      action={
-        <Button
-          component={Link}
-          href="/upload"
-          leftIcon={<TbPlus size={18} />}
-          sx={{
-            height: 48,
-            padding: "0 28px",
-            borderRadius: 24,
-            background: "#ffd84d",
-            color: "#111111",
-            fontWeight: 900,
-            "&:hover": { background: "#ffdf68" },
-          }}
-        >
-          新建
-        </Button>
-      }
+      action={null}
     >
       <Meta title={t("account.shares.title")} />
       {shares.length == 0 ? (
@@ -175,15 +194,30 @@ const MyShares = () => {
       ) : (
         <Paper className={classes.tablePanel}>
           <Group mb={24} spacing={14}>
-            <Checkbox size="lg" radius="sm" />
+            <Checkbox
+              size="lg"
+              radius="sm"
+              checked={allSelected}
+              onChange={(e) => handleSelectAllChange(e.currentTarget.checked)}
+            />
             <Text weight={900} size="lg">
               共 {filteredShares.length} 项
             </Text>
+            {selectedShareIds.length > 0 && (
+              <Button
+                color="red"
+                variant="light"
+                onClick={handleDeleteSelected}
+              >
+                删除已选 ({selectedShareIds.length})
+              </Button>
+            )}
           </Group>
           <Box sx={{ display: "block", overflowX: "auto" }}>
             <Table className={classes.table}>
               <thead>
                 <tr>
+                  <th style={{ width: 50 }}></th>
                   <th>
                     <FormattedMessage id="account.shares.table.id" />
                   </th>
@@ -202,6 +236,20 @@ const MyShares = () => {
               <tbody>
                 {filteredShares.map((share) => (
                   <tr key={share.id}>
+                    <td style={{ width: 50 }}>
+                      <Checkbox
+                        size="lg"
+                        radius="sm"
+                        checked={selectedShareIds.includes(share.id)}
+                        onChange={() => {
+                          if (selectedShareIds.includes(share.id)) {
+                            setSelectedShareIds(selectedShareIds.filter((id) => id !== share.id));
+                          } else {
+                            setSelectedShareIds([...selectedShareIds, share.id]);
+                          }
+                        }}
+                      />
+                    </td>
                     <td>
                       <Stack spacing={4}>
                         <Group spacing="xs">

@@ -105,6 +105,7 @@ const Users = () => {
       searchPlaceholder="在用户中搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="管理"
       navItems={[
         {
           href: "/admin/users",

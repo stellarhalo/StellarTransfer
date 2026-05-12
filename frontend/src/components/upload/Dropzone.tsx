@@ -276,6 +276,27 @@ const useStyles = createStyles((theme) => ({
     opacity: 0.9,
   },
 
+  transferReceiveBlurring: {
+    left: 8,
+    right: 10,
+    width: "auto",
+    background: "#ffffff",
+    border: "3px solid #ffd84d",
+    color: "#000000",
+    boxShadow: "0 10px 26px rgba(0, 0, 0, 0.12)",
+    transition:
+      "left 420ms cubic-bezier(0.22, 1, 0.36, 1), width 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), background 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease",
+
+    "&:hover": {
+      background: "#ffd84d",
+    },
+  },
+
+  transferReceiveHoverOnly: {
+    background: "#ffd84d",
+    animation: "receiveShake 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+  },
+
   transferReceiveLabel: {
     display: "block",
     opacity: 1,
@@ -337,7 +358,7 @@ const useStyles = createStyles((theme) => ({
     fontSize: 14,
     fontWeight: 800,
     whiteSpace: "nowrap",
-    caretColor: "#000000",
+    caretColor: "transparent",
 
     "&::placeholder": {
       color: "#000000",
@@ -351,6 +372,13 @@ const useStyles = createStyles((theme) => ({
       "12%": { background: "#ffd84d" },
       "70%": { background: "#ffd84d" },
       "100%": { background: "#ffffff" },
+    },
+    "@keyframes receiveShake": {
+      "0%, 100%": { transform: "translateX(0)" },
+      "20%": { transform: "translateX(-2px)" },
+      "40%": { transform: "translateX(2px)" },
+      "60%": { transform: "translateX(-1px)" },
+      "80%": { transform: "translateX(1px)" },
     },
     "@keyframes receiveCaretBlink": {
       "0%, 45%": { opacity: 1 },
@@ -398,9 +426,12 @@ const Dropzone = ({
   const { classes } = useStyles();
   const openRef = useRef<() => void>();
   const receiveInputRef = useRef<HTMLInputElement>(null);
+  const addActionRef = useRef<HTMLDivElement>(null);
+  const receiveButtonRef = useRef<HTMLDivElement>(null);
   const [isAddHovered, setIsAddHovered] = useState(false);
   const [isReceiveHovered, setIsReceiveHovered] = useState(false);
   const [isReceiveFocused, setIsReceiveFocused] = useState(false);
+  const [isReceiveBlurring, setIsReceiveBlurring] = useState(false);
   const [receiveCode, setReceiveCode] = useState("");
   const [addHoverPhase, setAddHoverPhase] = useState<"flash" | "add">("flash");
   const isReceiveActive = isReceiveHovered || isReceiveFocused;
@@ -422,8 +453,19 @@ const Dropzone = ({
   const addTitleText = title ?? t("upload.dropzone.title");
   const focusReceiveInput = () => {
     setIsAddHovered(false);
+    setIsReceiveBlurring(false);
     setIsReceiveFocused(true);
     window.setTimeout(() => receiveInputRef.current?.focus(), 0);
+  };
+
+  const blurReceiveInput = () => {
+    if (!receiveCode.trim() && isReceiveFocused) {
+      setIsReceiveBlurring(true);
+      setTimeout(() => {
+        setIsReceiveFocused(false);
+        setIsReceiveBlurring(false);
+      }, 420);
+    }
   };
 
   const submitReceiveCode = (code: string) => {
@@ -454,18 +496,38 @@ const Dropzone = ({
         onMouseLeave={() => {
           setIsAddHovered(false);
           setIsReceiveHovered(false);
+          if (isReceiveFocused && !receiveCode.trim()) {
+            blurReceiveInput();
+          }
+        }}
+        onMouseMove={(e) => {
+          const addAction = addActionRef.current;
+          const receiveBtn = receiveButtonRef.current;
+          if (!addAction || !receiveBtn) return;
+
+          const isOverAdd = addAction.contains(e.target as Node);
+          const isOverReceive = receiveBtn.contains(e.target as Node);
+
+          if (isOverAdd && !isReceiveActive) {
+            setIsAddHovered(true);
+          } else {
+            setIsAddHovered(false);
+          }
+
+          if (isOverReceive) {
+            setIsReceiveHovered(true);
+          } else if (!isReceiveFocused) {
+            setIsReceiveHovered(false);
+          }
         }}
       >
         <Group
+          ref={addActionRef}
           className={`${classes.transferAddAction} ${
             isAddHovered ? classes.transferAddActionHovered : ""
           } ${isReceiveActive ? classes.transferAddActionReceiveActive : ""}`}
           spacing={12}
           noWrap
-          onMouseEnter={() => {
-            if (!isReceiveActive) setIsAddHovered(true);
-          }}
-          onMouseLeave={() => setIsAddHovered(false)}
         >
           <div
             className={`${classes.transferPlus} ${
@@ -511,14 +573,17 @@ const Dropzone = ({
         </Group>
         {onReceive && (
           <div
+            ref={receiveButtonRef}
             role="button"
             tabIndex={0}
             className={`${classes.transferReceive} ${
               isReceiveFocused
                 ? classes.transferReceiveFocused
-                : isReceiveHovered
-                  ? classes.transferReceiveAnimated
-                  : ""
+                : isReceiveBlurring
+                  ? classes.transferReceiveBlurring
+                  : isReceiveHovered
+                    ? classes.transferReceiveHoverOnly
+                    : ""
             } ${isAddHovered ? classes.transferReceiveDimmed : ""}`}
             onClick={(event) => {
               event.preventDefault();
@@ -531,18 +596,12 @@ const Dropzone = ({
                 if (!isUploading) focusReceiveInput();
               }
             }}
-            onMouseEnter={() => {
-              setIsAddHovered(false);
-              setIsReceiveHovered(true);
-            }}
           >
             <span
               className={`${classes.transferReceiveLabel} ${
                 isReceiveFocused
                   ? classes.transferReceiveLabelFocusedHidden
-                  : isReceiveHovered
-                    ? classes.transferReceiveLabelHidden
-                    : ""
+                  : ""
               }`}
             >
               {receiveLabel ?? "接受文件"}
@@ -551,9 +610,7 @@ const Dropzone = ({
               className={`${classes.transferReceiveInput} ${
                 isReceiveFocused
                   ? classes.transferReceiveInputFocusedVisible
-                  : isReceiveHovered
-                    ? classes.transferReceiveInputVisible
-                    : ""
+                  : ""
               }`}
             >
               <span className={classes.transferCaret} />
@@ -573,7 +630,7 @@ const Dropzone = ({
                 }}
                 onFocus={() => setIsReceiveFocused(true)}
                 onBlur={() => {
-                  if (!receiveCode.trim()) setIsReceiveFocused(false);
+                  blurReceiveInput();
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {

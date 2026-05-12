@@ -103,6 +103,7 @@ const Shares = () => {
       searchPlaceholder="在共享记录内搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="管理"
       navItems={[
         {
           href: "/admin/users",

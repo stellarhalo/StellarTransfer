@@ -1,7 +1,5 @@
 import {
-  Accordion,
   ActionIcon,
-  Anchor,
   Box,
   Button,
   Center,
@@ -21,6 +19,7 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import {
   TbCloud,
+  TbEdit,
   TbHistory,
   TbInfoCircle,
   TbLink,
@@ -29,6 +28,8 @@ import {
 } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
 import Meta from "../../components/Meta";
+import showEditReverseShareModal from "../../components/account/showEditReverseShareModal";
+import showReverseShareInfoModal from "../../components/account/showReverseShareInfoModal";
 import showReverseShareLinkModal from "../../components/account/showReverseShareLinkModal";
 import showShareLinkModal from "../../components/account/showShareLinkModal";
 import CenterLoader from "../../components/core/CenterLoader";
@@ -63,6 +64,7 @@ const useStyles = createStyles(() => ({
       padding: "18px",
       color: "#222222",
       fontWeight: 700,
+      verticalAlign: "middle",
     },
   },
   actionIcon: {
@@ -89,6 +91,7 @@ const MyShares = () => {
 
   const [reverseShares, setReverseShares] = useState<MyReverseShare[]>();
   const [search, setSearch] = useState("");
+  const [selectedShareIds, setSelectedShareIds] = useState<string[]>([]);
 
   const getReverseShares = () => {
     shareService
@@ -118,25 +121,60 @@ const MyShares = () => {
       .includes(query);
   });
 
+  const allSelected = selectedShareIds.length > 0 && selectedShareIds.length === filteredReverseShares.length;
+
+  const handleSelectAllChange = (checked: boolean) => {
+    if (checked) {
+      setSelectedShareIds(filteredReverseShares.map((share) => share.id));
+    } else {
+      setSelectedShareIds([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    modals.openConfirmModal({
+      title: "确认删除",
+      children: (
+        <Text size="sm">
+          确定要删除选中的 {selectedShareIds.length} 个闪包吗？此操作不可恢复。
+        </Text>
+      ),
+      confirmProps: {
+        color: "red",
+      },
+      labels: {
+        confirm: t("common.button.delete"),
+        cancel: t("common.button.cancel"),
+      },
+      onConfirm: () => {
+        Promise.all(selectedShareIds.map((id) => shareService.removeReverseShare(id))).then(() => {
+          setReverseShares(reverseShares.filter((share) => !selectedShareIds.includes(share.id)));
+          setSelectedShareIds([]);
+        });
+      },
+    });
+  };
+
   return (
     <DriveWorkspace
       section="我的闪包"
       sectionHref="/account/shares"
-      title={<FormattedMessage id="account.reverseShares.title" />}
+      title="我的闪包"
       activePath="/account/reverseShares"
       searchPlaceholder="在我的闪包内搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="账户信息"
       navItems={[
         {
           href: "/account/shares",
-          icon: <TbCloud size={22} />,
-          label: <FormattedMessage id="account.shares.title" />,
+          icon: <TbHistory size={22} />,
+          label: "我的共享",
         },
         {
           href: "/account/reverseShares",
-          icon: <TbHistory size={22} />,
-          label: <FormattedMessage id="account.reverseShares.title" />,
+          icon: <TbCloud size={22} />,
+          label: "我的闪包",
         },
         {
           href: "/account",
@@ -200,15 +238,30 @@ const MyShares = () => {
       ) : (
         <Paper className={classes.tablePanel}>
           <Group mb={24} spacing={14}>
-            <Checkbox size="lg" radius="sm" />
+            <Checkbox
+              size="lg"
+              radius="sm"
+              checked={allSelected}
+              onChange={(e) => handleSelectAllChange(e.currentTarget.checked)}
+            />
             <Text weight={900} size="lg">
               共 {filteredReverseShares.length} 项
             </Text>
+            {selectedShareIds.length > 0 && (
+              <Button
+                color="red"
+                variant="light"
+                onClick={handleDeleteSelected}
+              >
+                删除已选 ({selectedShareIds.length})
+              </Button>
+            )}
           </Group>
           <Box sx={{ display: "block", overflowX: "auto" }}>
             <Table className={classes.table}>
               <thead>
                 <tr>
+                  <th style={{ width: 50 }}></th>
                   <th>
                     <FormattedMessage id="account.reverseShares.table.shares" />
                   </th>
@@ -224,67 +277,24 @@ const MyShares = () => {
               <tbody>
                 {filteredReverseShares.map((reverseShare) => (
                   <tr key={reverseShare.id}>
+                    <td style={{ width: 50 }}>
+                      <Checkbox
+                        size="lg"
+                        radius="sm"
+                        checked={selectedShareIds.includes(reverseShare.id)}
+                        onChange={() => {
+                          if (selectedShareIds.includes(reverseShare.id)) {
+                            setSelectedShareIds(selectedShareIds.filter((id) => id !== reverseShare.id));
+                          } else {
+                            setSelectedShareIds([...selectedShareIds, reverseShare.id]);
+                          }
+                        }}
+                      />
+                    </td>
                     <td style={{ width: 220 }}>
-                      {reverseShare.shares.length == 0 ? (
-                        <Stack spacing={4}>
-                          <Text weight={900}>闪包</Text>
-                          <Text size="sm" className={classes.metaText}>
-                            <FormattedMessage id="account.reverseShares.table.no-shares" />
-                          </Text>
-                        </Stack>
-                      ) : (
-                        <Accordion>
-                          <Accordion.Item
-                            value="customization"
-                            sx={{ borderBottom: "none" }}
-                          >
-                            <Accordion.Control p={0}>
-                              <Text size="sm">
-                                {reverseShare.shares.length == 1
-                                  ? `1 ${t(
-                                      "account.reverseShares.table.count.singular",
-                                    )}`
-                                  : `${reverseShare.shares.length} ${t(
-                                      "account.reverseShares.table.count.plural",
-                                    )}`}
-                              </Text>
-                            </Accordion.Control>
-                            <Accordion.Panel>
-                              {reverseShare.shares.map((share) => (
-                                <Group key={share.id} mb={4}>
-                                  <Anchor
-                                    href={`${window.location.origin}/share/${share.id}`}
-                                    target="_blank"
-                                  >
-                                    <Text maw={120} truncate>
-                                      {share.id}
-                                    </Text>
-                                  </Anchor>
-                                  <ActionIcon
-                                    color="victoria"
-                                    variant="light"
-                                    size={25}
-                                    onClick={() => {
-                                      if (window.isSecureContext) {
-                                        clipboard.copy(
-                                          `${window.location.origin}/s/${share.id}`,
-                                        );
-                                        toast.success(
-                                          t("common.notify.copied-link"),
-                                        );
-                                      } else {
-                                        showShareLinkModal(modals, share.id);
-                                      }
-                                    }}
-                                  >
-                                    <TbLink />
-                                  </ActionIcon>
-                                </Group>
-                              ))}
-                            </Accordion.Panel>
-                          </Accordion.Item>
-                        </Accordion>
-                      )}
+                      <Stack spacing={4}>
+                        <Text weight={900}>{reverseShare.name || "未命名闪包"}</Text>
+                      </Stack>
                     </td>
                     <td>
                       {byteToHumanSizeString(
@@ -298,6 +308,29 @@ const MyShares = () => {
                     </td>
                     <td>
                       <Group position="right">
+                        <ActionIcon
+                          className={classes.actionIcon}
+                          size={34}
+                          onClick={() => {
+                            showEditReverseShareModal(
+                              modals,
+                              reverseShare,
+                              config.get("share.maxExpiration"),
+                              getReverseShares,
+                            );
+                          }}
+                        >
+                          <TbEdit />
+                        </ActionIcon>
+                        <ActionIcon
+                          className={classes.actionIcon}
+                          size={34}
+                          onClick={() => {
+                            showReverseShareInfoModal(modals, reverseShare);
+                          }}
+                        >
+                          <TbInfoCircle />
+                        </ActionIcon>
                         <ActionIcon
                           className={classes.actionIcon}
                           size={34}

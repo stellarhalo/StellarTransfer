@@ -209,6 +209,7 @@ export default function AdminConfigCategory() {
       searchPlaceholder="在配置项中搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="配置管理"
       navItems={categories.map((category) => ({
         href: `/admin/config/${category.id}`,
         icon: category.icon,

@@ -113,6 +113,7 @@ const createReverseShare = async (
   sendEmailNotification: boolean,
   simplified: boolean,
   publicAccess: boolean,
+  name?: string,
 ) => {
   return (
     await api.post("reverseShares", {
@@ -121,6 +122,7 @@ const createReverseShare = async (
       sendEmailNotification,
       simplified,
       publicAccess,
+      name,
     })
   ).data;
 };
@@ -137,6 +139,13 @@ const setReverseShare = async (reverseShareToken: string) => {
 
 const removeReverseShare = async (id: string) => {
   await api.delete(`/reverseShares/${id}`);
+};
+
+const updateReverseShare = async (
+  id: string,
+  data: { name?: string; shareExpiration?: string; maxShareSize?: string },
+) => {
+  await api.patch(`/reverseShares/${id}`, data);
 };
 
 export default {
@@ -159,4 +168,5 @@ export default {
   createReverseShare,
   getMyReverseShares,
   removeReverseShare,
+  updateReverseShare,
 };

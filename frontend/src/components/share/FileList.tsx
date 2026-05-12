@@ -89,8 +89,7 @@ const FileList = ({
       sx={{
         display: "block",
         overflowX: "auto",
-        border: "1px solid rgba(24, 25, 27, 0.08)",
-        borderRadius: 12,
+        border: "1px solid #eee",
         background: "#fff",
       }}
     >
@@ -109,7 +108,7 @@ const FileList = ({
             height: 72,
           },
           "tbody tr + tr": {
-            borderTop: "1px solid rgba(24, 25, 27, 0.08)",
+            borderTop: "1px solid #eee",
           },
           "td": {
             padding: "0 18px",
@@ -140,7 +139,9 @@ const FileList = ({
             : files!.map((file) => (
                 <tr key={file.name}>
                   <td>{file.name}</td>
-                  <td>{byteToHumanSizeString(parseInt(file.size))}</td>
+                  <td style={{ color: "#8d8d8d" }}>
+                    {byteToHumanSizeString(parseInt(file.size))}
+                  </td>
                   <td>
                     <Group position="right">
                       {shareService.doesFileSupportPreview(file.name) && (
@@ -151,6 +152,9 @@ const FileList = ({
                           size={38}
                           radius={19}
                           variant="light"
+                          sx={{
+                            color: "#444",
+                          }}
                         >
                           <TbEye />
                         </ActionIcon>
@@ -161,6 +165,9 @@ const FileList = ({
                           radius={19}
                           variant="light"
                           onClick={() => copyFileLink(file)}
+                          sx={{
+                            color: "#444",
+                          }}
                         >
                           <TbLink />
                         </ActionIcon>
@@ -170,9 +177,10 @@ const FileList = ({
                         radius={19}
                         variant="filled"
                         sx={{
-                          background: "#171717",
+                          background: "#ffd84d",
+                          color: "#5a4b16",
                           "&:hover": {
-                            background: "#2b2b2b",
+                            background: "#ffe066",
                           },
                         }}
                         onClick={async () => {

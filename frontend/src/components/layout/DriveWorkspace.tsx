@@ -22,9 +22,9 @@ import {
   TbCircle,
   TbHelpCircle,
   TbSearch,
-  TbSettings,
   TbX,
 } from "react-icons/tb";
+import ActionAvatar from "../header/ActionAvatar";
 import useUser from "../../hooks/user.hook";
 import notificationHistory, {
   NotificationHistoryItem,
@@ -285,6 +285,7 @@ const DriveWorkspace = ({
   searchValue,
   onSearchChange,
   sidebarFooter,
+  breadcrumbPrefix,
 }: {
   title: ReactNode;
   section: ReactNode;
@@ -297,6 +298,7 @@ const DriveWorkspace = ({
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   sidebarFooter?: ReactNode;
+  breadcrumbPrefix?: string;
 }) => {
   const { classes, cx } = useStyles();
   const router = useRouter();
@@ -323,9 +325,6 @@ const DriveWorkspace = ({
   }, []);
 
   const openHelp = () => void router.push("/help");
-  const openSettings = () => {
-    if (user?.isAdmin) void router.push("/admin/config/general");
-  };
   const exitWorkspace = () => void router.push("/upload");
 
   const clearNotifications = () => {
@@ -340,8 +339,7 @@ const DriveWorkspace = ({
           <Box component={Link} href="/upload" className={classes.logo}>
             <Image src="/img/logo.png" width={42} height={42} alt="logo" />
             <Box>
-              <Text inherit>星闪</Text>
-              <Text inherit>快传</Text>
+              <Text inherit>星闪包</Text>
             </Box>
           </Box>
           <Box className={classes.nav}>
@@ -379,10 +377,10 @@ const DriveWorkspace = ({
                 href={sectionHref}
                 className={cx(classes.breadcrumb, classes.breadcrumbLink)}
               >
-                {section}
+                {breadcrumbPrefix}
               </Text>
             ) : (
-              <Text className={classes.breadcrumb}>{section}</Text>
+              <Text className={classes.breadcrumb}>{breadcrumbPrefix}</Text>
             )}
             <Text className={classes.breadcrumb}>›</Text>
             <Text className={classes.title}>{title}</Text>
@@ -483,22 +481,7 @@ const DriveWorkspace = ({
                 )}
               </Popover.Dropdown>
             </Popover>
-            <Tooltip
-              label={user?.isAdmin ? "设置" : "只有管理员可以打开系统设置"}
-              withArrow
-            >
-              <ActionIcon
-                className={cx(classes.iconButton, {
-                  [classes.disabledIconButton]: !user?.isAdmin,
-                })}
-                size="lg"
-                onClick={openSettings}
-                title="设置"
-                aria-disabled={!user?.isAdmin}
-              >
-                <TbSettings size={22} />
-              </ActionIcon>
-            </Tooltip>
+            <ActionAvatar />
             <ActionIcon
               className={classes.iconButton}
               size="lg"

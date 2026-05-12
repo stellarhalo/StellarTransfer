@@ -186,16 +186,17 @@ const Account = () => {
       searchPlaceholder="在我的闪包内搜索"
       searchValue={search}
       onSearchChange={setSearch}
+      breadcrumbPrefix="账户信息"
       navItems={[
         {
           href: "/account/shares",
-          icon: <TbCloud size={22} />,
-          label: <FormattedMessage id="account.shares.title" />,
+          icon: <TbHistory size={22} />,
+          label: "我的共享",
         },
         {
           href: "/account/reverseShares",
-          icon: <TbHistory size={22} />,
-          label: <FormattedMessage id="account.reverseShares.title" />,
+          icon: <TbCloud size={22} />,
+          label: "我的闪包",
         },
         {
           href: "/account",

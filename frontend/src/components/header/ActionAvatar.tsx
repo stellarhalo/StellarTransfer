@@ -19,7 +19,7 @@ const ActionAvatar = () => {
         <Menu.Item component={Link} href="/account" icon={<TbUser size={14} />}>
           <FormattedMessage id="navbar.avatar.account" />
         </Menu.Item>
-        {user!.isAdmin && (
+        {user?.isAdmin && (
           <Menu.Item
             component={Link}
             href="/admin"

@@ -52,6 +52,7 @@ export class ReverseShareService {
         remainingUses: 1,
         simplified: data.simplified,
         publicAccess: data.publicAccess,
+        name: data.name || null,
         creator: {
           connect: { id: creatorId },
         },
@@ -80,10 +81,22 @@ export class ReverseShareService {
       orderBy: {
         shareExpiration: "desc",
       },
-      include: { shares: { include: { creator: true } } },
+      include: { shares: { include: { creator: true, files: true } } },
     });
 
-    return reverseShares;
+    // Calculate current size for each reverse share
+    return reverseShares.map((rs) => {
+      let currentSize = 0;
+      for (const share of rs.shares) {
+        for (const file of share.files) {
+          currentSize += parseInt(file.size) || 0;
+        }
+      }
+      return {
+        ...rs,
+        currentSize,
+      };
+    });
   }
 
   async isValid(reverseShareToken: string) {
@@ -109,5 +122,32 @@ export class ReverseShareService {
     }
 
     await this.prisma.reverseShare.delete({ where: { id } });
+  }
+
+  async update(id: string, data: { name?: string; shareExpiration?: string; maxShareSize?: string }) {
+    const updateData: any = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name || null;
+    }
+
+    if (data.shareExpiration !== undefined) {
+      const expirationDate = moment()
+        .add(
+          data.shareExpiration.split("-")[0],
+          data.shareExpiration.split("-")[1] as moment.unitOfTime.DurationConstructor,
+        )
+        .toDate();
+      updateData.shareExpiration = expirationDate;
+    }
+
+    if (data.maxShareSize !== undefined) {
+      updateData.maxShareSize = data.maxShareSize;
+    }
+
+    await this.prisma.reverseShare.update({
+      where: { id },
+      data: updateData,
+    });
   }
 }

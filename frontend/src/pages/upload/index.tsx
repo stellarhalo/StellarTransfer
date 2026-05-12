@@ -3,6 +3,7 @@ import {
   Anchor,
   Accordion,
   Alert,
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -11,17 +12,21 @@ import {
   Divider,
   Grid,
   Group,
+  Menu,
   MultiSelect,
   NumberInput,
   Paper,
   PasswordInput,
+  Popover,
   Progress,
+  ScrollArea,
   Select,
   Stack,
   Text,
   Textarea,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useForm, yupResolver } from "@mantine/form";
 import { useModals } from "@mantine/modals";
@@ -35,12 +40,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   TbAlertCircle,
   TbBell,
-  TbCloud,
   TbCheck,
+  TbCircle,
+  TbCloud,
+  TbDoorExit,
   TbHelpCircle,
   TbHistory,
   TbLanguage,
   TbLogin,
+  TbSettings,
+  TbUser,
+  TbX,
 } from "react-icons/tb";
 import { FormattedMessage, useIntl } from "react-intl";
 import Logo from "../../components/Logo";
@@ -65,6 +75,10 @@ import * as yup from "yup";
 import CopyTextField from "../../components/upload/CopyTextField";
 import ActionAvatar from "../../components/header/ActionAvatar";
 import i18nUtil from "../../utils/i18n.util";
+import notificationHistory, {
+  NotificationHistoryItem,
+} from "../../utils/notificationHistory.util";
+import authService from "../../services/auth.service";
 
 const promiseLimit = pLimit(3);
 let errorToastShown = false;
@@ -73,7 +87,7 @@ let createdShare: Share;
 const HOME_COPY = {
   zh: {
     brandPrimary: "星闪包",
-    history: "传输历史",
+    history: "我的共享",
     cloud: "我的闪包",
     signIn: "注册/登录",
     language: "EN",
@@ -104,7 +118,7 @@ const HOME_COPY = {
   },
   en: {
     brandPrimary: "StellarTransfer",
-    history: "History",
+    history: "My Shares",
     cloud: "My Flash Packs",
     signIn: "Sign in",
     language: "中",
@@ -676,6 +690,7 @@ const Upload = ({
   const [completedShare, setCompletedShare] = useState<CompletedShare>();
   const [language, setLanguage] = useState<string>("en-US");
   const [mounted, setMounted] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([]);
   const homeText = mounted
     ? language.startsWith("zh")
       ? HOME_COPY.zh
@@ -688,6 +703,30 @@ const Upload = ({
     setLanguage(lang);
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const refreshNotifications = () =>
+      setNotifications(notificationHistory.list());
+
+    refreshNotifications();
+    window.addEventListener(
+      notificationHistory.eventName,
+      refreshNotifications,
+    );
+
+    return () =>
+      window.removeEventListener(
+        notificationHistory.eventName,
+        refreshNotifications,
+      );
+  }, []);
+
+  const openHelp = () => void router.push("/help");
+
+  const clearNotifications = () => {
+    notificationHistory.clear();
+    setNotifications([]);
+  };
 
   const toggleLanguage = () => {
     const nextLanguage = language.startsWith("zh") ? "en-US" : "zh-CN";
@@ -908,12 +947,72 @@ const Upload = ({
             <TbCloud size={17} />
             {homeText.cloud}
           </Anchor>
-          <ActionIcon className={classes.navIcon} radius="xl" size={34}>
+          <ActionIcon className={classes.navIcon} radius="xl" size={34} onClick={openHelp}>
             <TbHelpCircle size={19} />
           </ActionIcon>
-          <ActionIcon className={classes.navIcon} radius="xl" size={34}>
-            <TbBell size={18} />
-          </ActionIcon>
+          <Popover width={340} position="bottom-end" shadow="xl" withinPortal>
+            <Popover.Target>
+              <ActionIcon className={classes.navIcon} radius="xl" size={34}>
+                <TbBell size={18} />
+              </ActionIcon>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Group position="apart" mb="sm">
+                <Text weight={900}>通知消息</Text>
+                {notifications.length > 0 && (
+                  <Button
+                    compact
+                    variant="subtle"
+                    onClick={clearNotifications}
+                  >
+                    清空
+                  </Button>
+                )}
+              </Group>
+              <Divider />
+              {notifications.length === 0 ? (
+                <Text color="dimmed" weight={700} py="md">
+                  暂无通知消息
+                </Text>
+              ) : (
+                <ScrollArea h={260} type="auto">
+                  <Stack spacing={0}>
+                    {notifications.map((notification) => (
+                      <Group
+                        key={notification.id}
+                        align="flex-start"
+                        noWrap
+                      >
+                        {notification.type === "success" ? (
+                          <TbCheck color="#2f9e44" size={18} />
+                        ) : (
+                          <TbCircle
+                            color={
+                              notification.type === "error"
+                                ? "#e03131"
+                                : "#ffd84d"
+                            }
+                            size={12}
+                          />
+                        )}
+                        <Box>
+                          <Text weight={900}>{notification.title}</Text>
+                          <Text size="sm" color="dimmed" weight={700}>
+                            {notification.message}
+                          </Text>
+                          <Text size="xs" color="dimmed" mt={4}>
+                            {new Date(
+                              notification.createdAt,
+                            ).toLocaleString()}
+                          </Text>
+                        </Box>
+                      </Group>
+                    ))}
+                  </Stack>
+                </ScrollArea>
+              )}
+            </Popover.Dropdown>
+          </Popover>
           {user ? (
             <Box className={classes.navAvatar}>
               <ActionAvatar />

@@ -6,67 +6,59 @@ import {
   NumberInput,
   Select,
   Stack,
-  Switch,
   Text,
   TextInput,
 } from "@mantine/core";
 import { useForm, yupResolver } from "@mantine/form";
 import { useModals } from "@mantine/modals";
 import { ModalsContextProps } from "@mantine/modals/lib/context";
-import { getCookie, setCookie } from "cookies-next";
 import moment from "moment";
-import { FormattedMessage } from "react-intl";
 import * as yup from "yup";
-import useTranslate, {
-  translateOutsideContext,
-} from "../../../hooks/useTranslate.hook";
-import shareService from "../../../services/share.service";
-import { Timespan } from "../../../types/timespan.type";
-import { getExpirationPreview } from "../../../utils/date.util";
-import toast from "../../../utils/toast.util";
-import FileSizeInput from "../../core/FileSizeInput";
-import showCompletedReverseShareModal from "./showCompletedReverseShareModal";
+import useTranslate from "../../hooks/useTranslate.hook";
+import { MyReverseShare } from "../../types/share.type";
+import { Timespan } from "../../types/timespan.type";
+import { getExpirationPreview } from "../../utils/date.util";
+import shareService from "../../services/share.service";
+import toast from "../../utils/toast.util";
+import FileSizeInput from "../core/FileSizeInput";
 
-const showCreateReverseShareModal = (
+const showEditReverseShareModal = (
   modals: ModalsContextProps,
-  showSendEmailNotificationOption: boolean,
+  reverseShare: MyReverseShare,
   maxExpiration: Timespan,
   getReverseShares: () => void,
 ) => {
-  const t = translateOutsideContext();
   return modals.openModal({
-    title: t("account.reverseShares.modal.title"),
+    title: "编辑闪包",
     children: (
       <Body
-        showSendEmailNotificationOption={showSendEmailNotificationOption}
-        getReverseShares={getReverseShares}
+        reverseShare={reverseShare}
         maxExpiration={maxExpiration}
+        getReverseShares={getReverseShares}
       />
     ),
   });
 };
 
 const Body = ({
-  getReverseShares,
-  showSendEmailNotificationOption,
+  reverseShare,
   maxExpiration,
+  getReverseShares,
 }: {
-  getReverseShares: () => void;
-  showSendEmailNotificationOption: boolean;
+  reverseShare: MyReverseShare;
   maxExpiration: Timespan;
+  getReverseShares: () => void;
 }) => {
   const modals = useModals();
   const t = useTranslate();
 
+  const initialExpiration = moment(reverseShare.shareExpiration).diff(moment(), "days");
   const form = useForm({
     initialValues: {
-      maxShareSize: 104857600,
-      sendEmailNotification: false,
-      expiration_num: 1,
+      name: reverseShare.name || "",
+      maxShareSize: parseInt(reverseShare.maxShareSize),
+      expiration_num: Math.max(1, initialExpiration),
       expiration_unit: "-days",
-      simplified: !!(getCookie("reverse-share.simplified") ?? false),
-      publicAccess: !!(getCookie("reverse-share.public-access") ?? true),
-      name: "",
     },
     validate: yupResolver(
       yup.object().shape({
@@ -79,10 +71,6 @@ const Body = ({
   });
 
   const onSubmit = form.onSubmit(async (values) => {
-    // remember simplified and publicAccess in cookies
-    setCookie("reverse-share.simplified", values.simplified);
-    setCookie("reverse-share.public-access", values.publicAccess);
-
     const expirationDate = moment().add(
       form.values.expiration_num,
       form.values.expiration_unit.replace(
@@ -108,17 +96,15 @@ const Body = ({
     }
 
     shareService
-      .createReverseShare(
-        values.expiration_num + values.expiration_unit,
-        values.maxShareSize,
-        values.sendEmailNotification,
-        values.simplified,
-        values.publicAccess,
-        values.name || undefined,
-      )
-      .then(({ link }) => {
+      .updateReverseShare(reverseShare.id, {
+        name: values.name || undefined,
+        maxShareSize: values.maxShareSize.toString(),
+        shareExpiration: values.expiration_num + values.expiration_unit,
+      })
+      .then(() => {
         modals.closeAll();
-        showCompletedReverseShareModal(modals, link, getReverseShares);
+        getReverseShares();
+        toast.success("闪包已更新");
       })
       .catch(toast.axiosError);
   });
@@ -127,6 +113,11 @@ const Body = ({
     <Group>
       <form onSubmit={onSubmit}>
         <Stack align="stretch">
+          <TextInput
+            label={t("account.reverseShares.modal.name.label")}
+            placeholder={t("account.reverseShares.modal.name.placeholder")}
+            {...form.getInputProps("name")}
+          />
           <div>
             <Grid align={form.errors.expiration_num ? "center" : "flex-end"}>
               <Col xs={6}>
@@ -143,7 +134,6 @@ const Body = ({
                 <Select
                   {...form.getInputProps("expiration_unit")}
                   data={[
-                    // Set the label to singular if the number is 1, else plural
                     {
                       value: "-minutes",
                       label:
@@ -207,53 +197,13 @@ const Body = ({
               )}
             </Text>
           </div>
-          <TextInput
-            label={t("account.reverseShares.modal.name.label")}
-            placeholder={t("account.reverseShares.modal.name.placeholder")}
-            {...form.getInputProps("name")}
-          />
           <FileSizeInput
             label={t("account.reverseShares.modal.max-size.label")}
             value={form.values.maxShareSize}
             onChange={(number) => form.setFieldValue("maxShareSize", number)}
           />
-          {showSendEmailNotificationOption && (
-            <Switch
-              mt="xs"
-              labelPosition="left"
-              label={t("account.reverseShares.modal.send-email")}
-              description={t(
-                "account.reverseShares.modal.send-email.description",
-              )}
-              {...form.getInputProps("sendEmailNotification", {
-                type: "checkbox",
-              })}
-            />
-          )}
-          <Switch
-            mt="xs"
-            labelPosition="left"
-            label={t("account.reverseShares.modal.simplified")}
-            description={t(
-              "account.reverseShares.modal.simplified.description",
-            )}
-            {...form.getInputProps("simplified", {
-              type: "checkbox",
-            })}
-          />
-          <Switch
-            mt="xs"
-            labelPosition="left"
-            label={t("account.reverseShares.modal.public-access")}
-            description={t(
-              "account.reverseShares.modal.public-access.description",
-            )}
-            {...form.getInputProps("publicAccess", {
-              type: "checkbox",
-            })}
-          />
           <Button mt="md" type="submit">
-            <FormattedMessage id="common.button.create" />
+            {t("common.button.save")}
           </Button>
         </Stack>
       </form>
@@ -261,4 +211,4 @@ const Body = ({
   );
 };
 
-export default showCreateReverseShareModal;
+export default showEditReverseShareModal;
