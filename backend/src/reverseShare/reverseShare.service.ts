@@ -124,6 +124,97 @@ export class ReverseShareService {
     await this.prisma.reverseShare.delete({ where: { id } });
   }
 
+  async getOrCreateShareForReverseShare(id: string) {
+    const reverseShare = await this.prisma.reverseShare.findUnique({
+      where: { id },
+      include: {
+        shares: true,
+      },
+    });
+
+    if (!reverseShare) throw new BadRequestException("Reverse share not found");
+
+    if (reverseShare.shares.length > 0) {
+      return reverseShare.shares[0];
+    }
+
+    const expirationDate = reverseShare.shareExpiration;
+    const storageProvider = this.config.get("s3.enabled") ? "S3" : "LOCAL";
+
+    const newShare = await this.prisma.share.create({
+      data: {
+        expiration: expirationDate,
+        reverseShare: {
+          connect: { id },
+        },
+        storageProvider,
+      },
+    });
+
+    return newShare;
+  }
+
+  async getFiles(id: string) {
+    const reverseShare = await this.prisma.reverseShare.findUnique({
+      where: { id },
+      include: {
+        shares: {
+          include: {
+            files: true,
+          },
+        },
+      },
+    });
+
+    if (!reverseShare) return [];
+
+    const files: Array<{ id: string; name: string; size: string; shareId: string; shareName: string | null }> = [];
+
+    for (const share of reverseShare.shares) {
+      for (const file of share.files) {
+        files.push({
+          id: file.id,
+          name: file.name,
+          size: file.size,
+          shareId: share.id,
+          shareName: share.name || null,
+        });
+      }
+    }
+
+    return files;
+  }
+
+  async getShareIdByFile(reverseShareId: string, fileId: string) {
+    const share = await this.prisma.reverseShare.findUnique({
+      where: { id: reverseShareId },
+      include: {
+        shares: {
+          include: {
+            files: true,
+          },
+        },
+      },
+    });
+
+    if (!share) throw new BadRequestException("Reverse share not found");
+
+    for (const s of share.shares) {
+      for (const file of s.files) {
+        if (file.id === fileId) {
+          return { shareId: s.id, fileId: file.id };
+        }
+      }
+    }
+
+    throw new BadRequestException("File not found");
+  }
+
+  async deleteFile(shareId: string, fileId: string) {
+    await this.prisma.file.delete({ where: { id: fileId } });
+    await this.fileService.deleteAllFiles(shareId);
+  }
+
   async update(id: string, data: { name?: string; shareExpiration?: string; maxShareSize?: string }) {
     const updateData: any = {};
 

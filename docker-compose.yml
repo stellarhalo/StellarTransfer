@@ -1,15 +1,29 @@
 services:
-  pingvin-share:
-    image: stonith404/pingvin-share # or ghcr.io/stonith404/pingvin-share
+  stellartransfer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stellartransfer:latest
+    container_name: stellartransfer
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - "${STELLARTRANSFER_PORT:-3000}:3000"
     environment:
-      - TRUST_PROXY=false # Set to true if a reverse proxy is in front of the container
+      NODE_ENV: docker
+      DATA_DIRECTORY: /opt/app/backend/data
+      DATABASE_URL: "file:/opt/app/backend/data/stellartransfer.db?connection_limit=1"
+      TRUST_PROXY: "${TRUST_PROXY:-false}"
+      CADDY_DISABLED: "${CADDY_DISABLED:-false}"
+      BACKEND_PORT: "8080"
+      PORT: "3333"
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-1000}"
     volumes:
-      - "./data:/opt/app/backend/data"
-      - "./data/images:/opt/app/frontend/public/img"
-  #      - "./config.yaml:/opt/app/config.yaml" # Add this line, if you want to configure pingvin-share via config file and not via UI
+      - stellartransfer-data:/opt/app/backend/data
+      - stellartransfer-images:/opt/app/frontend/public/img
+      # Optional file-based configuration:
+      # - ./config.yaml:/opt/app/config.yaml:ro
 
-  # To add ClamAV, to scan your shares for malicious files, 
-  # see https://stonith404.github.io/pingvin-share/setup/integrations/#clamav-docker-only
+volumes:
+  stellartransfer-data:
+  stellartransfer-images:

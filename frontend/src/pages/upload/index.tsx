@@ -69,7 +69,7 @@ import useConfirmLeave from "../../hooks/confirm-leave.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
 import useUser from "../../hooks/user.hook";
 import shareService from "../../services/share.service";
-import { FileUpload } from "../../types/File.type";
+import { FileMetaData, FileUpload } from "../../types/File.type";
 import { CompletedShare, CreateShare, Share } from "../../types/share.type";
 import { Timespan } from "../../types/timespan.type";
 import { getExpirationPreview } from "../../utils/date.util";
@@ -884,10 +884,14 @@ const Upload = ({
   maxShareSize,
   isReverseShare = false,
   simplified,
+  shareId,
+  existingFiles,
 }: {
   maxShareSize?: number;
   isReverseShare: boolean;
   simplified: boolean;
+  shareId?: string;
+  existingFiles?: FileMetaData[];
 }) => {
   const { classes, cx } = useStyles();
   const modals = useModals();
@@ -964,8 +968,12 @@ const Upload = ({
     setisUploading(true);
 
     try {
-      const isReverseShare = router.pathname != "/upload";
-      createdShare = await shareService.create(share, isReverseShare);
+      if (shareId && isReverseShare) {
+        createdShare = { id: shareId } as Share;
+      } else {
+        const isReverseShareFlag = router.pathname != "/upload";
+        createdShare = await shareService.create(share, isReverseShareFlag);
+      }
     } catch (e) {
       toast.axiosError(e);
       setisUploading(false);
@@ -1041,6 +1049,12 @@ const Upload = ({
   };
 
   const showCreateUploadModalCallback = (files: FileUpload[]) => {
+    if (isReverseShare && shareId) {
+      const fakeShare = { id: shareId } as CreateShare;
+      uploadFiles(fakeShare, files);
+      return;
+    }
+
     showCreateUploadModal(
       modals,
       {
@@ -1145,8 +1159,8 @@ const Upload = ({
       files.every((file) => file.uploadingProgress >= 100) &&
       fileErrorCount == 0
     ) {
-      shareService
-        .completeShare(createdShare.id)
+      const completePromise = shareService.completeShare(createdShare.id);
+      completePromise
         .then((share) => {
           setisUploading(false);
           if (isReverseShare) {
@@ -1156,7 +1170,14 @@ const Upload = ({
             setCompletedShare(share);
           }
         })
-        .catch(() => toast.error(t("upload.notify.generic-error")));
+        .catch((e) => {
+          setisUploading(false);
+          if (isReverseShare && shareId) {
+            setFiles([]);
+          } else {
+            toast.error(t("upload.notify.generic-error"));
+          }
+        });
     }
   }, [files]);
 

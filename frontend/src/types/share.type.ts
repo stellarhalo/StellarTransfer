@@ -60,3 +60,11 @@ export type MyShareSecurity = {
   passwordProtected: boolean;
   maxViews: number;
 };
+
+export type ReverseShareFile = {
+  id: string;
+  name: string;
+  size: string;
+  shareId: string;
+  shareName: string | null;
+};

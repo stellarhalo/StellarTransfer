@@ -26,3 +26,41 @@ BSD 2-Clause 是宽松开源许可证，不具备 GPL 类许可证的“传染�
 ## 说明
 
 当前仓库仍保留 Pingvin Share 的核心架构、后端能力与部分原始代码结构。后续开发应继续参考原项目代码、许可证和文档，确保修改范围、署名和再分发方式符合开源协议要求。
+
+## Docker 部署
+
+本仓库提供重新整理后的 Docker 配置，镜像和服务命名均使用 StellarTransfer。
+
+```bash
+docker compose up -d --build
+```
+
+默认访问地址：
+
+```text
+http://localhost:3000
+```
+
+常用环境变量：
+
+- `STELLARTRANSFER_PORT`：宿主机映射端口，默认 `3000`。
+- `TRUST_PROXY`：如果容器前面还有 Nginx、Caddy、Traefik 等反向代理，设置为 `true`。
+- `PUID` / `PGID`：容器内运行用户对应的宿主机用户和用户组，默认 `1000`。
+- `CADDY_DISABLED`：设置为 `true` 时不启动容器内 Caddy，仅保留后端端口用于自定义部署。
+
+数据会保存在 Docker volumes：
+
+- `stellartransfer-data`：数据库和上传文件。
+- `stellartransfer-images`：前端可替换图片资源。
+
+如需启用 ClamAV：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.clamav.yml up -d --build
+```
+
+停止服务：
+
+```bash
+docker compose down
+```

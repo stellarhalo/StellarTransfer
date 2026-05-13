@@ -127,6 +127,24 @@ const createReverseShare = async (
   ).data;
 };
 
+const getMyReverseShareFiles = async (reverseShareId: string) => {
+  return (await api.get(`reverseShares/${reverseShareId}/files`)).data;
+};
+
+const getReverseShareShareId = async (reverseShareId: string) => {
+  const { data } = await api.get(`reverseShares/${reverseShareId}/share-id`);
+  return data.shareId;
+};
+
+const deleteReverseShareFile = async (reverseShareId: string, fileId: string) => {
+  await api.delete(`reverseShares/${reverseShareId}/files/${fileId}`);
+};
+
+const getFileShareId = async (reverseShareId: string, fileId: string) => {
+  const { data } = await api.get(`reverseShares/${reverseShareId}/files/${fileId}/share-id`);
+  return data;
+};
+
 const getMyReverseShares = async (): Promise<MyReverseShare[]> => {
   return (await api.get("reverseShares")).data;
 };
@@ -169,4 +187,8 @@ export default {
   getMyReverseShares,
   removeReverseShare,
   updateReverseShare,
+  getMyReverseShareFiles,
+  getReverseShareShareId,
+  deleteReverseShareFile,
+  getFileShareId,
 };

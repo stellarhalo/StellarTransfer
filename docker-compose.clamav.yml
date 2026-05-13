@@ -1,0 +1,16 @@
+services:
+  stellartransfer:
+    environment:
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+    depends_on:
+      - clamav
+
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+
+volumes:
+  clamav-data:

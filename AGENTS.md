@@ -78,8 +78,8 @@ cd frontend && npm run dev|build|start|lint|format
 cd backend && npm run start:dev|start:prod
 
 # Docker
-docker-compose up -d
-docker-compose.dev.yml  # Development
+docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.clamav.yml up -d --build
 ```
 
 ## NOTES

@@ -1,8 +1,18 @@
-backend/dist/
-backend/node_modules/
+.git
+.github
+.sisyphus
+
 backend/data
+backend/dist
+backend/node_modules
+backend/prisma/dev.db
+backend/prisma/*.db
 
-frontend/node_modules/
-frontend/.next/
+frontend/.next
+frontend/node_modules
+frontend/out
 
-**/.git/
+docs
+node_modules
+*.log
+.DS_Store

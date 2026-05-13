@@ -55,6 +55,19 @@ export class ReverseShareController {
     );
   }
 
+  @Get(":reverseShareId/files")
+  @UseGuards(JwtGuard, ReverseShareOwnerGuard)
+  async getFiles(@Param("reverseShareId") id: string) {
+    return this.reverseShareService.getFiles(id);
+  }
+
+  @Get(":reverseShareId/share-id")
+  @UseGuards(JwtGuard, ReverseShareOwnerGuard)
+  async getShareId(@Param("reverseShareId") id: string) {
+    const share = await this.reverseShareService.getOrCreateShareForReverseShare(id);
+    return { shareId: share.id };
+  }
+
   @Get()
   @UseGuards(JwtGuard)
   async getAllByUser(@GetUser() user: User) {
@@ -67,6 +80,25 @@ export class ReverseShareController {
   @UseGuards(JwtGuard, ReverseShareOwnerGuard)
   async remove(@Param("reverseShareId") id: string) {
     await this.reverseShareService.remove(id);
+  }
+
+  @Get(":reverseShareId/files/:fileId/share-id")
+  @UseGuards(JwtGuard, ReverseShareOwnerGuard)
+  async getShareIdByFile(
+    @Param("reverseShareId") id: string,
+    @Param("fileId") fileId: string,
+  ) {
+    return this.reverseShareService.getShareIdByFile(id, fileId);
+  }
+
+  @Delete(":reverseShareId/files/:fileId")
+  @UseGuards(JwtGuard, ReverseShareOwnerGuard)
+  async deleteFile(
+    @Param("reverseShareId") id: string,
+    @Param("fileId") fileId: string,
+  ) {
+    const share = await this.reverseShareService.getOrCreateShareForReverseShare(id);
+    await this.reverseShareService.deleteFile(share.id, fileId);
   }
 
   @Patch(":reverseShareId")
