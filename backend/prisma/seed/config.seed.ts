@@ -1,7 +1,19 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import * as crypto from "crypto";
 
-export const configVariables = {
+type ConfigVariableProperties = {
+  type: string;
+  defaultValue?: string;
+  value?: string | null;
+  obscured?: boolean;
+  secret?: boolean;
+  locked?: boolean;
+};
+
+export const configVariables: Record<
+  string,
+  Record<string, ConfigVariableProperties>
+> = {
   internal: {
     jwtSecret: {
       type: "string",
@@ -471,10 +483,10 @@ async function migrateConfigVariables() {
   const orderMap: { [category: string]: number } = {};
 
   for (const existingConfigVariable of existingConfigVariables) {
+    const configVariablesOfCategory =
+      configVariables[existingConfigVariable.category];
     const configVariable =
-      configVariables[existingConfigVariable.category]?.[
-        existingConfigVariable.name
-      ];
+      configVariablesOfCategory?.[existingConfigVariable.name];
 
     // Delete the config variable if it doesn't exist in the seed
     if (!configVariable) {
@@ -489,9 +501,9 @@ async function migrateConfigVariables() {
 
       // Update the config variable if it exists in the seed
     } else {
-      const variableOrder = Object.keys(
-        configVariables[existingConfigVariable.category],
-      ).indexOf(existingConfigVariable.name);
+      const variableOrder = Object.keys(configVariablesOfCategory).indexOf(
+        existingConfigVariable.name,
+      );
       await prisma.config.update({
         where: {
           name_category: {

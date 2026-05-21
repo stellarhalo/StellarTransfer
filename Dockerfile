@@ -24,6 +24,7 @@ RUN npx prisma generate
 RUN npm run build
 
 FROM node:22-alpine AS runtime
+
 ENV NODE_ENV=docker
 ENV PORT=3333
 ENV BACKEND_PORT=8080
@@ -31,8 +32,8 @@ ENV HOSTNAME=0.0.0.0
 ENV DATA_DIRECTORY=/opt/app/backend/data
 ENV DATABASE_URL=file:/opt/app/backend/data/stellartransfer.db?connection_limit=1
 
-RUN deluser --remove-home node \
-  && apk add --no-cache caddy curl openssl su-exec
+RUN deluser --remove-home node && \
+    apk add --no-cache caddy curl openssl su-exec
 
 WORKDIR /opt/app
 

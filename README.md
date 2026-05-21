@@ -41,6 +41,27 @@ docker compose up -d --build
 http://localhost:3000
 ```
 
+重建并刷新本地服务：
+
+```bash
+docker compose build stellartransfer
+docker compose up -d stellartransfer
+```
+
+服务启动后可用以下地址做快速验证：
+
+```text
+http://localhost:3000/upload
+http://localhost:3000/api/health
+```
+
+未登录用户访问账户工作区页面时会跳转到登录页，并保留原始访问路径用于登录后返回，例如：
+
+```text
+/account/shares -> /auth/signIn?redirect=%2Faccount%2Fshares
+/account/reverseShares -> /auth/signIn?redirect=%2Faccount%2FreverseShares
+```
+
 常用环境变量：
 
 - `STELLARTRANSFER_PORT`：宿主机映射端口，默认 `3000`。

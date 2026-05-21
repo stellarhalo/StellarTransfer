@@ -2,7 +2,7 @@ import { ActionIcon, Box, Button, Group, LoadingOverlay, Stack, Text, Title, Pro
 import { useModals } from "@mantine/modals";
 import { GetServerSidePropsContext } from "next";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import pLimit from "p-limit";
 import { TbArrowLeft, TbExternalLink, TbPlus, TbX } from "react-icons/tb";
 import showErrorModal from "../../components/share/showErrorModal";
@@ -79,7 +79,7 @@ const Share = ({ reverseShareToken }: { reverseShareToken: string }) => {
     loadFiles(reverseShareId);
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 

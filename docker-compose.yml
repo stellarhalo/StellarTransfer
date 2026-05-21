@@ -21,8 +21,6 @@ services:
     volumes:
       - stellartransfer-data:/opt/app/backend/data
       - stellartransfer-images:/opt/app/frontend/public/img
-      # Optional file-based configuration:
-      # - ./config.yaml:/opt/app/config.yaml:ro
 
 volumes:
   stellartransfer-data:

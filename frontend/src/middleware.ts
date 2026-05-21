@@ -101,7 +101,7 @@ export async function middleware(request: NextRequest) {
     },
     {
       condition: !user && routes.account.contains(route),
-      path: "/upload",
+      path: "/auth/signIn",
     },
     // Admin privileges
     {
