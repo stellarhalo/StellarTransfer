@@ -25,20 +25,6 @@ export function middleware(request: NextRequest) {
     user = null;
   }
 
-  const publicRoutes = new Routes([
-    "/share/*",
-    "/s/*",
-    "/upload",
-    "/upload/*",
-    "/help",
-    "/404",
-    "/error",
-    "/imprint",
-    "/privacy",
-    "/auth/*",
-    "/",
-  ]);
-
   const accountRoutes = new Routes(["/account*"]);
   const adminRoutes = new Routes(["/admin/*"]);
 

@@ -37,7 +37,9 @@ const isLanguageSupported = (code: string) => {
 
 const getLanguageFromNavigator = (): string | null => {
   if (typeof navigator === "undefined") return null;
-  return getLanguageFromAcceptHeader(navigator.language);
+  const lang = navigator.language;
+  if (!lang) return null;
+  return getLanguageFromAcceptHeader(lang);
 };
 
 const setLanguageCookie = (code: string) => {
