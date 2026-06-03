@@ -1223,59 +1223,70 @@ const Upload = ({
           >
             <TbHelpCircle size={19} />
           </ActionIcon>
-          <Popover width={340} position="bottom-end" shadow="xl" withinPortal>
-            <Popover.Target>
-              <ActionIcon className={classes.navIcon} radius="xl" size={34}>
-                <TbBell size={18} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Group position="apart" mb="sm">
-                <Text weight={900}>通知消息</Text>
-                {notifications.length > 0 && (
-                  <Button compact variant="subtle" onClick={clearNotifications}>
-                    清空
-                  </Button>
+          {user ? (
+            <Popover width={340} position="bottom-end" shadow="xl" withinPortal>
+              <Popover.Target>
+                <ActionIcon className={classes.navIcon} radius="xl" size={34}>
+                  <TbBell size={18} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Group position="apart" mb="sm">
+                  <Text weight={900}>通知消息</Text>
+                  {notifications.length > 0 && (
+                    <Button compact variant="subtle" onClick={clearNotifications}>
+                      清空
+                    </Button>
+                  )}
+                </Group>
+                <Divider />
+                {notifications.length === 0 ? (
+                  <Text color="dimmed" weight={700} py="md">
+                    暂无通知消息
+                  </Text>
+                ) : (
+                  <ScrollArea h={260} type="auto">
+                    <Stack spacing={0}>
+                      {notifications.map((notification) => (
+                        <Group key={notification.id} align="flex-start" noWrap>
+                          {notification.type === "success" ? (
+                            <TbCheck color="#2f9e44" size={18} />
+                          ) : (
+                            <TbCircle
+                              color={
+                                notification.type === "error"
+                                  ? "#e03131"
+                                  : "#ffd84d"
+                              }
+                              size={12}
+                            />
+                          )}
+                          <Box>
+                            <Text weight={900}>{notification.title}</Text>
+                            <Text size="sm" color="dimmed" weight={700}>
+                              {notification.message}
+                            </Text>
+                            <Text size="xs" color="dimmed" mt={4}>
+                              {new Date(notification.createdAt).toLocaleString()}
+                            </Text>
+                          </Box>
+                        </Group>
+                      ))}
+                    </Stack>
+                  </ScrollArea>
                 )}
-              </Group>
-              <Divider />
-              {notifications.length === 0 ? (
-                <Text color="dimmed" weight={700} py="md">
-                  暂无通知消息
-                </Text>
-              ) : (
-                <ScrollArea h={260} type="auto">
-                  <Stack spacing={0}>
-                    {notifications.map((notification) => (
-                      <Group key={notification.id} align="flex-start" noWrap>
-                        {notification.type === "success" ? (
-                          <TbCheck color="#2f9e44" size={18} />
-                        ) : (
-                          <TbCircle
-                            color={
-                              notification.type === "error"
-                                ? "#e03131"
-                                : "#ffd84d"
-                            }
-                            size={12}
-                          />
-                        )}
-                        <Box>
-                          <Text weight={900}>{notification.title}</Text>
-                          <Text size="sm" color="dimmed" weight={700}>
-                            {notification.message}
-                          </Text>
-                          <Text size="xs" color="dimmed" mt={4}>
-                            {new Date(notification.createdAt).toLocaleString()}
-                          </Text>
-                        </Box>
-                      </Group>
-                    ))}
-                  </Stack>
-                </ScrollArea>
-              )}
-            </Popover.Dropdown>
-          </Popover>
+              </Popover.Dropdown>
+            </Popover>
+          ) : (
+            <ActionIcon
+              className={classes.navIcon}
+              radius="xl"
+              size={34}
+              onClick={() => router.push('/auth/signIn?redirect=' + encodeURIComponent(router.asPath))}
+            >
+              <TbBell size={18} />
+            </ActionIcon>
+          )}
           {user ? (
             <Box className={classes.navAvatar}>
               <ActionAvatar />

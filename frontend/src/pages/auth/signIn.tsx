@@ -20,8 +20,6 @@ const SignIn = ({ redirectPath }: { redirectPath?: string }) => {
 
   const [isLoading, setIsLoading] = useState(redirectPath ? true : false);
 
-  // If the access token is expired, the middleware redirects to this page.
-  // If the refresh token is still valid, the user will be redirected to the last page.
   useEffect(() => {
     refreshUser().then((user) => {
       if (user) {
@@ -32,13 +30,11 @@ const SignIn = ({ redirectPath }: { redirectPath?: string }) => {
     });
   }, []);
 
-  if (isLoading) return <LoadingOverlay overlayOpacity={1} visible />;
-
   return (
     <>
       <Meta title={t("signin.title")} />
       <SignInForm redirectPath={redirectPath ?? "/upload"} />
+      {isLoading && <LoadingOverlay overlayOpacity={0.3} visible />}
     </>
   );
 };
-export default SignIn;
