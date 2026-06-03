@@ -35,6 +35,11 @@ const isLanguageSupported = (code: string) => {
   return Object.values(LOCALES).some((l) => l.code === code);
 };
 
+const getLanguageFromNavigator = (): string | null => {
+  if (typeof navigator === "undefined") return null;
+  return getLanguageFromAcceptHeader(navigator.language);
+};
+
 const setLanguageCookie = (code: string) => {
   setCookie("language", code, {
     sameSite: "lax",
@@ -45,6 +50,7 @@ const setLanguageCookie = (code: string) => {
 export default {
   getLocaleByCode,
   getLanguageFromAcceptHeader,
+  getLanguageFromNavigator,
   isLanguageSupported,
   setLanguageCookie,
 };

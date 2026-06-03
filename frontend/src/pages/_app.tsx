@@ -9,15 +9,13 @@ import {
 import { useColorScheme } from "@mantine/hooks";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
-import axios from "axios";
 import { getCookie, setCookie } from "cookies-next";
 import moment from "moment";
 import "moment/min/locales";
-import { GetServerSidePropsContext } from "next";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IntlProvider } from "react-intl";
 import Header from "../components/header/Header";
 import { ConfigContext } from "../hooks/config.hook";
@@ -53,51 +51,66 @@ const excludeDefaultLayoutRoutes = [
 ];
 
 function App({ Component, pageProps }: AppProps) {
-  const systemTheme = useColorScheme(pageProps.colorScheme);
+  const systemTheme = useColorScheme();
   const router = useRouter();
 
   const [colorScheme, setColorScheme] = useState<ColorScheme>(systemTheme);
-
-  const [user, setUser] = useState<CurrentUser | null>(pageProps.user);
-  const [route, setRoute] = useState<string>(pageProps.route);
-
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [route, setRoute] = useState<string>("");
   const [configVariables, setConfigVariables] = useState<Config[]>(
-    pageProps.configVariables,
+    defaultConfigVariables,
   );
+  const [mounted, setMounted] = useState(false);
+
+  const lastAccessToken = useRef<string | null>(null);
+
+  const fetchConfig = useCallback(async () => {
+    const vars = await configService.list();
+    setConfigVariables(vars);
+    return vars;
+  }, []);
+
+  const fetchUser = useCallback(async () => {
+    const u = await userService.getCurrentUser().catch(() => null);
+    setUser(u);
+    return u;
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+    setRoute(router.pathname);
+
+    const language = i18nUtil.getLanguageFromNavigator();
+    const cookieLanguage = getCookie("language");
+    if (language && language !== cookieLanguage) {
+      i18nUtil.setLanguageCookie(language);
+    }
+
+    fetchConfig();
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     setRoute(router.pathname);
   }, [router.pathname]);
 
   useEffect(() => {
-    const interval = setInterval(
-      async () => await authService.refreshAccessToken(),
-      2 * 60 * 1000, // 2 minutes
-    );
+    const interval = setInterval(async () => {
+      await authService.refreshAccessToken();
+    }, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (!pageProps.language) return;
-    const cookieLanguage = getCookie("language");
-    if (pageProps.language != cookieLanguage) {
-      i18nUtil.setLanguageCookie(pageProps.language);
-      if (cookieLanguage) location.reload();
+    const currentToken = getCookie("access_token") as string | undefined;
+    if (currentToken !== lastAccessToken.current) {
+      lastAccessToken.current = currentToken ?? null;
+      fetchUser();
     }
-  }, []);
+  }, [router.pathname]);
 
   useEffect(() => {
-    const colorScheme =
-      userPreferences.get("colorScheme") == "system"
-        ? systemTheme
-        : userPreferences.get("colorScheme");
-
-    toggleColorScheme(colorScheme);
-  }, [systemTheme]);
-
-  useEffect(() => {
-    if (!configVariables) return;
     const getConfig = (key: string) => configService.get(key, configVariables);
     const currentRoute = router.pathname;
 
@@ -140,8 +153,10 @@ function App({ Component, pageProps }: AppProps) {
     });
   };
 
-  const language = useRef(pageProps.language);
+  const language = useRef(i18nUtil.getLanguageFromNavigator() ?? LOCALES.ENGLISH.code);
   moment.locale(language.current);
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -171,18 +186,15 @@ function App({ Component, pageProps }: AppProps) {
               <ConfigContext.Provider
                 value={{
                   configVariables,
-                  refresh: async () => {
-                    setConfigVariables(await configService.list());
-                  },
+                  refresh: fetchConfig,
                 }}
               >
                 <UserContext.Provider
                   value={{
                     user,
                     refreshUser: async () => {
-                      const user = await userService.getCurrentUser();
-                      setUser(user);
-                      return user;
+                      const u = await fetchUser();
+                      return u;
                     },
                   }}
                 >
@@ -233,45 +245,5 @@ function App({ Component, pageProps }: AppProps) {
     </>
   );
 }
-
-// Fetch user and config variables on server side when the first request is made
-// These will get passed as a page prop to the App component and stored in the contexts
-App.getInitialProps = async ({ ctx }: { ctx: GetServerSidePropsContext }) => {
-  let pageProps: {
-    user?: CurrentUser;
-    configVariables?: Config[];
-    route?: string;
-    colorScheme: ColorScheme;
-    language?: string;
-  } = {
-    route: ctx.resolvedUrl,
-    colorScheme:
-      (getCookie("mantine-color-scheme", ctx) as ColorScheme) ?? "light",
-  };
-
-  if (ctx.req) {
-    const apiURL = process.env.API_URL || "http://localhost:8080";
-    const cookieHeader = ctx.req.headers.cookie;
-
-    pageProps.user = await axios(`${apiURL}/api/users/me`, {
-      headers: { cookie: cookieHeader },
-    })
-      .then((res) => res.data)
-      .catch(() => null);
-
-    pageProps.configVariables = await axios(`${apiURL}/api/configs`)
-      .then((res) => res.data)
-      .catch(() => defaultConfigVariables);
-
-    pageProps.route = ctx.req.url;
-
-    const requestLanguage = i18nUtil.getLanguageFromAcceptHeader(
-      ctx.req.headers["accept-language"],
-    );
-
-    pageProps.language = ctx.req.cookies["language"] ?? requestLanguage;
-  }
-  return { pageProps };
-};
 
 export default App;
