@@ -38,3 +38,5 @@ const SignIn = ({ redirectPath }: { redirectPath?: string }) => {
     </>
   );
 };
+
+export default SignIn;
