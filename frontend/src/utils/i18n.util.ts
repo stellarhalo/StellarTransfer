@@ -25,7 +25,7 @@ const getLanguageFromAcceptHeader = (acceptLanguage?: string) => {
       const similarLanguage = supportedLanguages.find((l) =>
         l.startsWith(language.split("-")[0]),
       );
-      return similarLanguage;
+      return similarLanguage ?? "en";
     }
   }
   return "en";
