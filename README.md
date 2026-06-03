@@ -4,6 +4,12 @@ StellarTransfer 是基于 [stonith404/pingvin-share](https://github.com/stonith4
 
 本项目在原有自托管文件分享能力的基础上，对前端首页、上传流程、取件码展示与接收文件交互进行了定制。
 
+## Demo
+
+在线体验：http://stellartransfer.stellarhalo.com.cn:3000/
+
+> ⚠️ Demo 环境服务器配置较低，且会不定时清理存储的文件，请勿将其作为永久存储的正式环境使用。
+
 ## 来源与致谢
 
 - 感谢 [Pingvin Share](https://github.com/stonith404/pingvin-share) 原项目及其贡献者提供的开源基础。
