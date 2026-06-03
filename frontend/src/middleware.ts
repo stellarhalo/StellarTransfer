@@ -1,46 +1,15 @@
 import { jwtDecode } from "jwt-decode";
 import { NextRequest, NextResponse } from "next/server";
-import defaultConfigVariables from "./config/defaultConfig";
-import configService from "./services/config.service";
 
-// This middleware redirects based on different conditions:
-// - Authentication state
-// - Setup status
-// - Admin privileges
+// This middleware only handles auth-based route protection.
+// Config-dependent redirects (registration, SMTP, legal, etc.) are handled
+// client-side in _app.tsx to avoid fetching config on every navigation.
 
 export const config = {
   matcher: "/((?!api|static|.*\\..*|_next).*)",
 };
 
-export async function middleware(request: NextRequest) {
-  const routes = {
-    unauthenticated: new Routes(["/auth/*", "/"]),
-    public: new Routes([
-      "/share/*",
-      "/s/*",
-      "/upload",
-      "/upload/*",
-      "/help",
-      "/404",
-      "/error",
-      "/imprint",
-      "/privacy",
-    ]),
-    admin: new Routes(["/admin/*"]),
-    account: new Routes(["/account*"]),
-    disabled: new Routes([]),
-  };
-
-  // Get config from backend
-  const apiUrl = process.env.API_URL || "http://localhost:8080";
-  const config = await fetch(`${apiUrl}/api/configs`)
-    .then((res) => res.json())
-    .catch(() => defaultConfigVariables);
-
-  const getConfig = (key: string) => {
-    return configService.get(key, config);
-  };
-
+export function middleware(request: NextRequest) {
   const route = request.nextUrl.pathname;
   let user: { isAdmin: boolean } | null = null;
   const accessToken = request.cookies.get("access_token")?.value;
@@ -56,83 +25,35 @@ export async function middleware(request: NextRequest) {
     user = null;
   }
 
-  if (!getConfig("share.allowRegistration")) {
-    routes.disabled.routes.push("/auth/signUp");
+  const publicRoutes = new Routes([
+    "/share/*",
+    "/s/*",
+    "/upload",
+    "/upload/*",
+    "/help",
+    "/404",
+    "/error",
+    "/imprint",
+    "/privacy",
+    "/auth/*",
+    "/",
+  ]);
+
+  const accountRoutes = new Routes(["/account*"]);
+  const adminRoutes = new Routes(["/admin/*"]);
+
+  if (!user && (accountRoutes.contains(route) || adminRoutes.contains(route))) {
+    return NextResponse.redirect(
+      new URL("/auth/signIn?redirect=" + encodeURIComponent(route), request.url),
+    );
   }
 
-  if (getConfig("share.allowUnauthenticatedShares")) {
-    routes.public.routes = ["*"];
+  if (adminRoutes.contains(route) && !user?.isAdmin) {
+    return NextResponse.redirect(new URL("/upload", request.url));
   }
 
-  if (!getConfig("smtp.enabled")) {
-    routes.disabled.routes.push("/auth/resetPassword*");
-  }
-
-  if (!getConfig("legal.enabled")) {
-    routes.disabled.routes.push("/imprint", "/privacy");
-  } else {
-    if (!getConfig("legal.imprintText") && !getConfig("legal.imprintUrl")) {
-      routes.disabled.routes.push("/imprint");
-    }
-    if (
-      !getConfig("legal.privacyPolicyText") &&
-      !getConfig("legal.privacyPolicyUrl")
-    ) {
-      routes.disabled.routes.push("/privacy");
-    }
-  }
-
-  // prettier-ignore
-  const rules = [
-    // Disabled routes
-    {
-      condition: routes.disabled.contains(route),
-      path: "/",
-    },
-     // Authenticated state
-     {
-      condition: user && routes.unauthenticated.contains(route) && !getConfig("share.allowUnauthenticatedShares"),
-      path: "/upload",
-    },
-    // Unauthenticated state
-    {
-      condition: !user && !routes.public.contains(route) && !routes.unauthenticated.contains(route),
-      path: "/auth/signIn",
-    },
-    {
-      condition: !user && routes.account.contains(route),
-      path: "/auth/signIn",
-    },
-    // Admin privileges
-    {
-      condition: routes.admin.contains(route) && !user?.isAdmin,
-      path: "/upload",
-    },
-    // Home page
-    {
-      condition: (!getConfig("general.showHomePage") || user) && route == "/",
-      path: "/upload",
-    },
-    // Imprint redirect
-    {
-      condition: route == "/imprint" && !getConfig("legal.imprintText") && getConfig("legal.imprintUrl"),
-      path: getConfig("legal.imprintUrl"),
-    },
-    // Privacy redirect
-    {
-      condition: route == "/privacy" && !getConfig("legal.privacyPolicyText") && getConfig("legal.privacyPolicyUrl"),
-      path: getConfig("legal.privacyPolicyUrl"),
-    },
-  ];
-  for (const rule of rules) {
-    if (rule.condition) {
-      let { path } = rule;
-
-      if (path == "/auth/signIn") {
-        path = path + "?redirect=" + encodeURIComponent(route);
-      }
-      return NextResponse.redirect(new URL(path, request.url));
-    }
+  if (user && route.startsWith("/auth/")) {
+    return NextResponse.redirect(new URL("/upload", request.url));
   }
 }
 

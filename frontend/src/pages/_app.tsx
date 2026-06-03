@@ -96,6 +96,43 @@ function App({ Component, pageProps }: AppProps) {
     toggleColorScheme(colorScheme);
   }, [systemTheme]);
 
+  useEffect(() => {
+    if (!configVariables) return;
+    const getConfig = (key: string) => configService.get(key, configVariables);
+    const currentRoute = router.pathname;
+
+    if (!getConfig("share.allowRegistration") && currentRoute === "/auth/signUp") {
+      router.replace("/");
+      return;
+    }
+
+    if (!getConfig("smtp.enabled") && currentRoute.startsWith("/auth/resetPassword")) {
+      router.replace("/");
+      return;
+    }
+
+    if (!getConfig("legal.enabled")) {
+      if (currentRoute === "/imprint" || currentRoute === "/privacy") {
+        router.replace("/");
+        return;
+      }
+    } else {
+      if (currentRoute === "/imprint" && !getConfig("legal.imprintText") && getConfig("legal.imprintUrl")) {
+        window.location.href = getConfig("legal.imprintUrl");
+        return;
+      }
+      if (currentRoute === "/privacy" && !getConfig("legal.privacyPolicyText") && getConfig("legal.privacyPolicyUrl")) {
+        window.location.href = getConfig("legal.privacyPolicyUrl");
+        return;
+      }
+    }
+
+    if ((!getConfig("general.showHomePage") || user) && currentRoute === "/") {
+      router.replace("/upload");
+      return;
+    }
+  }, [configVariables, router.pathname, user]);
+
   const toggleColorScheme = (value: ColorScheme) => {
     setColorScheme(value ?? "light");
     setCookie("mantine-color-scheme", value ?? "light", {
