@@ -18,6 +18,7 @@ import { MyShare } from "../../../types/share.type";
 import { byteToHumanSizeString } from "../../../utils/fileSize.util";
 import { copyToClipboard } from "../../../utils/clipboard.util";
 import toast from "../../../utils/toast.util";
+import showShareLinkModal from "../../account/showShareLinkModal";
 
 const useStyles = createStyles(() => ({
   table: {
