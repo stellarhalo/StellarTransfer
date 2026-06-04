@@ -8,6 +8,7 @@ import { TbCheck } from "react-icons/tb";
 import useConfig from "../../../hooks/config.hook";
 import useTranslate from "../../../hooks/useTranslate.hook";
 import { CompletedShare } from "../../../types/share.type";
+import { copyToClipboard } from "../../../utils/clipboard.util";
 import toast from "../../../utils/toast.util";
 import CopyTextField from "../CopyTextField";
 
@@ -94,8 +95,8 @@ const Body = ({ share }: { share: CompletedShare }) => {
           mt={8}
           noWrap
           sx={{ cursor: "pointer" }}
-          onClick={() => {
-            navigator.clipboard.writeText(pickupCode);
+          onClick={async () => {
+            await copyToClipboard(pickupCode);
             toast.success("已复制该取件码");
           }}
         >

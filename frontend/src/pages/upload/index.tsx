@@ -75,6 +75,7 @@ import { Timespan } from "../../types/timespan.type";
 import { getExpirationPreview } from "../../utils/date.util";
 import { byteToHumanSizeString } from "../../utils/fileSize.util";
 import toast from "../../utils/toast.util";
+import { copyToClipboard } from "../../utils/clipboard.util";
 import { useRouter } from "next/router";
 import * as yup from "yup";
 import CopyTextField from "../../components/upload/CopyTextField";
@@ -1750,7 +1751,10 @@ const HomepageUploadPanel = ({
           <CopyTextField link={link} />
           <Button
             className={classes.yellowAction}
-            onClick={() => navigator.clipboard.writeText(link)}
+            onClick={async () => {
+              await copyToClipboard(link);
+              toast.success(labels.copyLink);
+            }}
           >
             {labels.copyLink}
           </Button>
@@ -1761,8 +1765,8 @@ const HomepageUploadPanel = ({
           <Group
             spacing={8}
             noWrap
-            onClick={() => {
-              navigator.clipboard.writeText(pickupCode);
+            onClick={async () => {
+              await copyToClipboard(pickupCode);
               toast.success(labels.codeCopied);
             }}
           >
