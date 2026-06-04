@@ -7,7 +7,6 @@ import {
   Table,
   TextInput,
 } from "@mantine/core";
-import { useClipboard } from "@mantine/hooks";
 import { useModals } from "@mantine/modals";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { TbDownload, TbEye, TbLink } from "react-icons/tb";
@@ -17,6 +16,7 @@ import shareService from "../../services/share.service";
 import { FileMetaData } from "../../types/File.type";
 import { Share } from "../../types/share.type";
 import { byteToHumanSizeString } from "../../utils/fileSize.util";
+import { copyToClipboard } from "../../utils/clipboard.util";
 import toast from "../../utils/toast.util";
 import TableSortIcon, { TableSort } from "../core/SortIcon";
 import showFilePreviewModal from "./modals/showFilePreviewModal";
@@ -32,7 +32,6 @@ const FileList = ({
   share: Share;
   isLoading: boolean;
 }) => {
-  const clipboard = useClipboard();
   const modals = useModals();
   const t = useTranslate();
 
@@ -62,13 +61,13 @@ const FileList = ({
     }
   };
 
-  const copyFileLink = (file: FileMetaData) => {
+  const copyFileLink = async (file: FileMetaData) => {
     const link = `${window.location.origin}/api/shares/${
       share.id
     }/files/${file.id}`;
 
-    if (window.isSecureContext) {
-      clipboard.copy(link);
+    const success = await copyToClipboard(link);
+    if (success) {
       toast.success(t("common.notify.copied-link"));
     } else {
       modals.openModal({
