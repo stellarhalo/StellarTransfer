@@ -46,6 +46,7 @@ const excludeDefaultLayoutRoutes = [
   "/help",
   "/auth/signIn",
   "/auth/signUp",
+  "/auth/adminSetup",
   "/share/[shareId]",
   "/share/[shareId]/edit",
 ];
@@ -60,6 +61,7 @@ function App({ Component, pageProps }: AppProps) {
   const [configVariables, setConfigVariables] = useState<Config[]>(
     defaultConfigVariables,
   );
+  const [hasAdmin, setHasAdmin] = useState<boolean>(true);
   const [mounted, setMounted] = useState(false);
 
   const lastAccessToken = useRef<string | null>(null);
@@ -88,7 +90,17 @@ function App({ Component, pageProps }: AppProps) {
 
     fetchConfig();
     fetchUser();
+    authService.hasAdmin().then((exists) => {
+      setHasAdmin(exists);
+    });
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    authService.hasAdmin().then((exists) => {
+      setHasAdmin(exists);
+    });
+  }, [router.pathname]);
 
   useEffect(() => {
     setRoute(router.pathname);
@@ -113,6 +125,16 @@ function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     const getConfig = (key: string) => configService.get(key, configVariables);
     const currentRoute = router.pathname;
+
+    if (!hasAdmin && currentRoute !== "/auth/adminSetup") {
+      router.replace("/auth/adminSetup");
+      return;
+    }
+
+    if (hasAdmin && currentRoute === "/auth/adminSetup") {
+      router.replace("/upload");
+      return;
+    }
 
     if (!getConfig("share.allowRegistration") && currentRoute === "/auth/signUp") {
       router.replace("/");
@@ -144,7 +166,7 @@ function App({ Component, pageProps }: AppProps) {
       router.replace("/upload");
       return;
     }
-  }, [configVariables, router.pathname, user]);
+  }, [configVariables, router.pathname, user, hasAdmin]);
 
   const toggleColorScheme = (value: ColorScheme) => {
     setColorScheme(value ?? "light");

@@ -28,6 +28,17 @@ const signUp = async (email: string, username: string, password: string) => {
   return response;
 };
 
+const hasAdmin = async (): Promise<boolean> => {
+  const response = await api.get("auth/hasAdmin");
+  return response.data.hasAdmin;
+};
+
+const signUpAdmin = async (email: string, username: string, password: string) => {
+  const response = await api.post("auth/signUpAdmin", { email, username, password });
+
+  return response;
+};
+
 const signOut = async () => {
   const response = await api.post("/auth/signOut");
 
@@ -100,6 +111,8 @@ export default {
   signIn,
   signInTotp,
   signUp,
+  signUpAdmin,
+  hasAdmin,
   signOut,
   refreshAccessToken,
   updatePassword,

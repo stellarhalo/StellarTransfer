@@ -10,16 +10,15 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm, yupResolver } from "@mantine/form";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as yup from "yup";
-import useConfig from "../../hooks/config.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
 import useUser from "../../hooks/user.hook";
 import authService from "../../services/auth.service";
 import toast from "../../utils/toast.util";
-import Logo from "../Logo";
+import Logo from "../../components/Logo";
+import Meta from "../../components/Meta";
 
 const useStyles = createStyles(() => ({
   page: {
@@ -82,35 +81,6 @@ const useStyles = createStyles(() => ({
       padding: "34px 18px",
     },
   },
-  nav: {
-    position: "absolute",
-    top: 24,
-    right: 28,
-    minHeight: 52,
-    borderRadius: 28,
-    background: "#fff",
-    boxShadow: "0 12px 34px rgba(24, 25, 27, 0.08)",
-    padding: "8px 10px",
-    display: "flex",
-    gap: 6,
-    alignItems: "center",
-    "@media (max-width: 620px)": {
-      position: "static",
-      justifySelf: "center",
-      marginBottom: 18,
-    },
-  },
-  navLink: {
-    minWidth: 72,
-    height: 36,
-    borderRadius: 20,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#202124",
-    fontSize: 14,
-    fontWeight: 700,
-  },
   card: {
     width: "min(440px, 100%)",
     borderRadius: 12,
@@ -156,8 +126,7 @@ const useStyles = createStyles(() => ({
   },
 }));
 
-const SignUpForm = () => {
-  const config = useConfig();
+const AdminSetup = () => {
   const router = useRouter();
   const t = useTranslate();
   const { refreshUser } = useUser();
@@ -186,18 +155,23 @@ const SignUpForm = () => {
     validate: yupResolver(validationSchema),
   });
 
-  const signUp = async (email: string, username: string, password: string) => {
+  const signUpAdmin = async (
+    email: string,
+    username: string,
+    password: string,
+  ) => {
     await authService
-      .signUp(email.trim(), username.trim(), password.trim())
+      .signUpAdmin(email.trim(), username.trim(), password.trim())
       .then(async () => {
         await refreshUser();
-        router.replace("/");
+        router.replace("/admin/intro");
       })
       .catch(toast.axiosError);
   };
 
   return (
     <Box className={classes.page}>
+      <Meta title={isZh ? "初始化管理员" : "Admin Setup"} />
       <Box className={classes.hero}>
         <Box className={classes.logo}>
           <Box className={classes.logoMark}>
@@ -207,48 +181,28 @@ const SignUpForm = () => {
         </Box>
         <Box className={classes.heroCopy}>
           <Text size="sm" weight={800} transform="uppercase">
-            {isZh ? "文件快传" : "File Transfer"}
+            {isZh ? "首次部署" : "First Setup"}
           </Text>
           <Title order={1} mt={8} sx={{ maxWidth: 430, lineHeight: 1.05 }}>
             {isZh
-              ? "几秒钟搭建你的私有文件传输台。"
-              : "Build a private transfer desk in seconds."}
+              ? "欢迎使用星闪包，请先创建管理员账号。"
+              : "Welcome to StellarTransfer. Create your admin account to get started."}
           </Title>
         </Box>
       </Box>
       <Box className={classes.main}>
-        <Box className={classes.nav}>
-          <Anchor component={Link} href="/upload" className={classes.navLink}>
-            {t("navbar.upload")}
-          </Anchor>
-          <Anchor
-            component={Link}
-            href="/auth/signIn"
-            className={classes.navLink}
-          >
-            {t("navbar.signin")}
-          </Anchor>
-        </Box>
         <Paper className={classes.card}>
           <Title order={2} weight={900}>
-            <FormattedMessage id="signup.title" />
+            {isZh ? "创建管理员账号" : "Create Admin Account"}
           </Title>
-          {config.get("share.allowRegistration") && (
-            <Text color="dimmed" size="sm" mt={8} mb={28}>
-              <FormattedMessage id="signup.description" />{" "}
-              <Anchor
-                component={Link}
-                href={"/auth/signIn"}
-                size="sm"
-                weight={800}
-              >
-                <FormattedMessage id="signup.button.signin" />
-              </Anchor>
-            </Text>
-          )}
+          <Text color="dimmed" size="sm" mt={8} mb={28}>
+            {isZh
+              ? "这是系统中的第一个账号，将拥有管理员权限。"
+              : "This is the first account in the system and will have admin privileges."}
+          </Text>
           <form
             onSubmit={form.onSubmit((values) =>
-              signUp(values.email, values.username, values.password),
+              signUpAdmin(values.email, values.username, values.password),
             )}
           >
             <TextInput
@@ -277,7 +231,7 @@ const SignUpForm = () => {
               type="submit"
               className={classes.primaryButton}
             >
-              <FormattedMessage id="signup.button.submit" />
+              {isZh ? "创建管理员" : "Create Admin"}
             </Button>
           </form>
         </Paper>
@@ -286,4 +240,4 @@ const SignUpForm = () => {
   );
 };
 
-export default SignUpForm;
+export default AdminSetup;

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   Param,
   Patch,
@@ -52,6 +53,36 @@ export class AuthController {
       throw new ForbiddenException("Registration is not allowed");
 
     const result = await this.authService.signUp(dto, ip);
+
+    this.authService.addTokensToResponse(
+      response,
+      result.refreshToken,
+      result.accessToken,
+    );
+
+    return result;
+  }
+
+  @Get("hasAdmin")
+  @HttpCode(200)
+  async hasAdmin() {
+    const hasAdmin = await this.authService.hasAdmin();
+    return { hasAdmin };
+  }
+
+  @Post("signUpAdmin")
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: 10 * 60,
+    },
+  })
+  async signUpAdmin(
+    @Body() dto: AuthRegisterDTO,
+    @Req() { ip }: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.signUpAdmin(dto, ip);
 
     this.authService.addTokensToResponse(
       response,
