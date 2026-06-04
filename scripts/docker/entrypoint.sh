@@ -18,14 +18,13 @@ fi
 
 echo "Running database migrations..."
 cd /opt/app/backend
-npx prisma migrate deploy
+npx prisma migrate deploy || echo "WARNING: Migration failed, continuing anyway..."
 
 echo "Starting StellarTransfer frontend..."
 PORT="${PORT:-3333}" HOSTNAME="${HOSTNAME:-0.0.0.0}" node /opt/app/frontend/server.js &
 FRONTEND_PID="$!"
 
 echo "Starting StellarTransfer backend..."
-cd /opt/app/backend
 npm run prod &
 BACKEND_PID="$!"
 
