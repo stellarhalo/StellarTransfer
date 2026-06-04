@@ -16,6 +16,10 @@ else
   echo "Caddy reverse proxy disabled; backend is available on BACKEND_PORT only."
 fi
 
+echo "Running database migrations..."
+cd /opt/app/backend
+npx prisma migrate deploy
+
 echo "Starting StellarTransfer frontend..."
 PORT="${PORT:-3333}" HOSTNAME="${HOSTNAME:-0.0.0.0}" node /opt/app/frontend/server.js &
 FRONTEND_PID="$!"
